@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>VélourCare Ortho — 3D Treatment Viewer</title>
+  <link rel="icon" type="image/png" href="assets/vc-connect-square.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/viewer.css?v=6">
+</head>
+<body>
+  <div id="viewport"></div>
+  <div id="split-guides"></div>
+  <div id="lbl-tl" class="split-lbl"></div>
+  <div id="lbl-tr" class="split-lbl"></div>
+  <div id="lbl-bl" class="split-lbl"></div>
+  <div id="lbl-br" class="split-lbl"></div>
+
+  <!-- Left Vertical Tool Rail -->
+  <nav class="tool-rail glass" aria-label="Clinical Tools">
+    <div class="rail-group">
+      <img src="assets/vc-connect-square.png" alt="VélourCare" class="rail-mark">
+      <button id="tool-att" class="rail-btn active" data-tip="Attachments: Full">
+        <span class="badge-dot"></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4c2-1 3.5 0 5 0s3-1 5 0c2.2 1.2 2.4 4.8 1.5 8.5-.6 2.5-1.2 6.5-2.6 7.3-1.1.6-2-2.6-2.9-5.3-.3-.9-1.7-.9-2 0-.9 2.7-1.8 5.9-2.9 5.3C6.7 19 6.1 15 5.5 12.5 4.6 8.8 4.8 5.2 7 4Z"/><rect x="10" y="8" width="4" height="3" rx="1" fill="currentColor"/></svg>
+      </button>
+      <button id="tool-ghost" class="rail-btn" data-tip="Step 0 Ghost Superimposition">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="11" height="11" rx="3" stroke-dasharray="2.5 2.5"/><rect x="9" y="8" width="11" height="11" rx="3"/></svg>
+      </button>
+      <button id="tool-clip" class="rail-btn" data-tip="Cross-Section Clipping">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 12h16M8 5l4 4 4-4M8 19l4-4 4 4"/></svg>
+      </button>
+      <button id="tool-caliper" class="rail-btn" data-tip="3D Millimeter Caliper">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M19 5L5 19M15 5h4v4M9 19H5v-4M10 10l2 2M13 7l2 2"/></svg>
+      </button>
+      <button id="tool-insp" class="rail-btn" data-tip="Teeth & Anatomy List">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg>
+      </button>
+    </div>
+    <div class="rail-group">
+      <button id="tool-theme" class="rail-btn" data-tip="Switch Light / Dark Studio">
+        <svg id="ico-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg id="ico-moon" style="display:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Top-Center Floating Case Banner -->
+  <header class="top-banner glass">
+    <img src="assets/vc-connect-logo.svg" alt="VélourCare Ortho" class="brand-logo logo-dark">
+    <img src="assets/vc-connect-logo-dark.svg" alt="VélourCare Ortho" class="brand-logo logo-light">
+    <div class="banner-sep"></div>
+    <div class="case-meta">
+      <div id="case-title" class="case-title">3D Treatment Simulation</div>
+      <div id="case-sub" class="case-sub">Ready to load .iiwgl</div>
+    </div>
+    <div class="banner-actions">
+      <button id="btn-cam-mode" class="chip-btn active" title="Toggle Orthographic / Perspective">Ortho</button>
+      <button id="btn-open-file" class="chip-btn" title="Open Local .iiwgl File">Open</button>
+      <input id="file-input" type="file" accept=".iiwgl,.unencrypted" hidden>
+    </div>
+  </header>
+
+  <!-- Top-Left Clinical Camera Preset Strip -->
+  <div class="view-strip glass" id="view-strip">
+    <button class="view-tile active" data-view="front">
+      <svg viewBox="0 0 28 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="20" height="5" rx="2"/><rect x="5" y="11" width="18" height="5" rx="2"/></svg>
+      <span>Front</span>
+    </button>
+    <button class="view-tile" data-view="upper">
+      <svg viewBox="0 0 28 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 12h20M7 6h14a2 2 0 0 1 2 2v4H5V8a2 2 0 0 1 2-2Z"/></svg>
+      <span>Upper</span>
+    </button>
+    <button class="view-tile" data-view="lower">
+      <svg viewBox="0 0 28 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 8h20M5 8h18v4a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8Z"/></svg>
+      <span>Lower</span>
+    </button>
+    <button class="view-tile" data-view="left">
+      <svg viewBox="0 0 28 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 5h12c3 0 4 2 4 5s-1 5-4 5H7"/><path d="M7 10h14"/></svg>
+      <span>Left</span>
+    </button>
+    <button class="view-tile" data-view="right">
+      <svg viewBox="0 0 28 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 5H9C6 5 5 7 5 10s1 5 4 5h12"/><path d="M7 10h14"/></svg>
+      <span>Right</span>
+    </button>
+    <button class="view-tile" data-view="maxilla">
+      <svg viewBox="0 0 28 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 16V9a8 8 0 0 1 16 0v7"/></svg>
+      <span>Maxil.</span>
+    </button>
+    <button class="view-tile" data-view="mandible">
+      <svg viewBox="0 0 28 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 4v7a8 8 0 0 0 16 0V4"/></svg>
+      <span>Mandib.</span>
+    </button>
+    <button class="view-tile" data-view="occlusion">
+      <svg viewBox="0 0 28 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 13V8a5 5 0 0 1 10 0v5M14 7v5a5 5 0 0 0 10 0V7"/></svg>
+      <span>Occlus.</span>
+    </button>
+    <button class="view-tile" data-view="multi">
+      <svg viewBox="0 0 28 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="3" width="8" height="6" rx="1.5"/><rect x="16" y="3" width="8" height="6" rx="1.5"/><rect x="4" y="11" width="8" height="6" rx="1.5"/><rect x="16" y="11" width="8" height="6" rx="1.5"/></svg>
+      <span>Multi</span>
+    </button>
+  </div>
+
+  <!-- Floating Clipping Popover -->
+  <div id="clip-popover" class="tool-popover glass">
+    <div class="pop-title"><span>Cross-Section Clip</span><button id="clip-inv" class="chip-btn">Invert</button></div>
+    <div class="seg-row" id="clip-axes">
+      <button data-axis="none" class="active">Off</button>
+      <button data-axis="x">X</button>
+      <button data-axis="y">Y</button>
+      <button data-axis="z">Z</button>
+    </div>
+    <input id="clip-slider" type="range" class="vc-range" min="-1" max="1" step="0.01" value="0">
+  </div>
+
+  <!-- Caliper Readout -->
+  <div id="caliper-pill" class="caliper-pill glass">
+    <span>Distance:</span>
+    <span id="caliper-val" class="caliper-val">Click 2 points</span>
+    <button id="caliper-clear" class="chip-btn">Clear</button>
+  </div>
+
+  <!-- Collapsible Object Inspector -->
+  <aside id="inspector" class="inspector glass">
+    <div class="pop-title"><span>Scene Objects</span><button id="insp-close" class="chip-btn">Close</button></div>
+    <div style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:8px;">
+      <span>Gingiva Opacity</span>
+      <input id="gingiva-op" type="range" class="vc-range" min="0.15" max="1" step="0.05" value="0.85">
+    </div>
+    <div id="insp-list" class="insp-list"></div>
+  </aside>
+
+  <!-- Bottom Floating Dual-Arch Stage Dock -->
+  <section class="stage-dock glass" aria-label="Treatment Stages">
+    <div class="dock-top">
+      <div class="transport">
+        <button id="ctrl-first" class="t-btn" title="First Stage"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="5" width="2.5" height="14"/><polygon points="19 5 9 12 19 19"/></svg></button>
+        <button id="ctrl-prev" class="t-btn" title="Previous Stage"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="17 5 7 12 17 19"/></svg></button>
+        <button id="ctrl-play" class="t-btn play-btn" title="Play / Pause"><svg id="ico-play" viewBox="0 0 24 24" fill="currentColor"><polygon points="7 4 20 12 7 20"/></svg><svg id="ico-pause" style="display:none" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg></button>
+        <button id="ctrl-next" class="t-btn" title="Next Stage"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="7 5 17 12 7 19"/></svg></button>
+        <button id="ctrl-last" class="t-btn" title="Final Stage"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 5 15 12 5 19"/><rect x="17.5" y="5" width="2.5" height="14"/></svg></button>
+        <button id="ctrl-loop" class="t-btn" title="Loop Playback"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg></button>
+      </div>
+      <div class="dock-right">
+        <div class="speed-pills" id="speed-pills">
+          <button class="spd-btn" data-spd="0.5">x0.5</button>
+          <button class="spd-btn active" data-spd="1">x1</button>
+          <button class="spd-btn" data-spd="1.5">x1.5</button>
+          <button class="spd-btn" data-spd="2">x2</button>
+        </div>
+        <div id="step-readout" class="step-readout">Step 0 / 0</div>
+      </div>
+    </div>
+    <div id="stage-track" class="stage-track"></div>
+  </section>
+
+  <!-- Loading Overlay -->
+  <div id="loader-overlay" class="overlay-backdrop hidden">
+    <div class="modal-card glass">
+      <img src="assets/vc-connect-logo.svg" alt="VélourCare Ortho" class="brand-logo logo-dark" style="height:34px">
+      <img src="assets/vc-connect-logo-dark.svg" alt="VélourCare Ortho" class="brand-logo logo-light" style="height:34px">
+      <p id="loader-msg">Downloading 3D treatment plan...</p>
+      <div class="prog-track"><div id="prog-fill" class="prog-fill"></div></div>
+    </div>
+  </div>
+
+  <!-- Dropzone / Password Modal -->
+  <div id="entry-modal" class="overlay-backdrop hidden">
+    <div class="modal-card glass">
+      <img src="assets/vc-connect-logo.svg" alt="VélourCare Ortho" class="brand-logo logo-dark" style="height:32px">
+      <img src="assets/vc-connect-logo-dark.svg" alt="VélourCare Ortho" class="brand-logo logo-light" style="height:32px">
+      <h2 id="modal-title">Load 3D Treatment Plan</h2>
+      <p id="modal-desc">Drop an OnyxCeph <code>.iiwgl</code> export here or select a file to inspect.</p>
+      <div id="drop-zone" class="drop-zone">Click or drag &amp; drop a <strong>.iiwgl</strong> file</div>
+      <input id="pwd-input" type="password" class="pwd-input" placeholder="Case password (if encrypted)" style="display:none">
+      <button id="pwd-submit" class="btn-gold" style="display:none">Unlock &amp; Render</button>
+      <div id="modal-err" class="err-text"></div>
+    </div>
+  </div>
+
+  <script src="js/vendor/three.min.js"></script>
+  <script src="js/vendor/OrbitControls.js"></script>
+  <script src="js/vendor/openctm.js"></script>
+  <script src="js/iiwgl.js?v=6"></script>
+  <script src="js/app.js?v=6"></script>
+</body>
+</html>

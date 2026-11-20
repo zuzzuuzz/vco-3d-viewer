@@ -1,0 +1,8 @@
+.env
+.env.*
+*.iiwgl
+*.unencrypted
+*.ii3
+*.stl
+.DS_Store
+Thumbs.db
