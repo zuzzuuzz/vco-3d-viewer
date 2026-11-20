@@ -616,12 +616,35 @@
     }
   }
 
-  async function fetchIIWGL(url, pwd, title) {
+  function normalizeMlink(raw) {
+    let s = (raw || '').trim();
+    if (/^cases\.vcconnect\.link(\/|$)/i.test(s)) s = 'https://' + s;
+    s = s.replace(/^(https?:\/\/cases\.vcconnect\.link)(?!\/|$)/i, '$1/');
+    try {
+      const u = new URL(s, location.href);
+      if (u.protocol === 'http:' && u.hostname !== 'localhost' && u.hostname !== '127.0.0.1') {
+        u.protocol = 'https:';
+      }
+      u.pathname = u.pathname.replace(/\/{2,}/g, '/');
+      return u.toString();
+    } catch (_) {
+      return s;
+    }
+  }
+
+  async function fetchIIWGL(rawUrl, pwd, title) {
+    const url = normalizeMlink(rawUrl);
     $('entry-modal').classList.add('hidden');
     $('loader-overlay').classList.remove('hidden');
     $('prog-fill').style.width = '5%';
     try {
-      const res = await fetch(url);
+      let res;
+      try {
+        res = await fetch(url);
+      } catch (_) {
+        await new Promise(r => setTimeout(r, 800));
+        res = await fetch(url);
+      }
       if (!res.ok) throw new Error(`HTTP ${res.status} loading case`);
       const total = parseInt(res.headers.get('content-length') || '0', 10);
       const reader = res.body && res.body.getReader ? res.body.getReader() : null;
@@ -644,9 +667,11 @@
       $('loader-msg').textContent = 'Decoding OpenCTM meshes...';
       requestAnimationFrame(() => tryOpenBuffer(buf, pwd, title));
     } catch (e) {
+      let host = '';
+      try { host = new URL(url, location.href).host; } catch (_) {}
       $('loader-overlay').classList.add('hidden');
       $('entry-modal').classList.remove('hidden');
-      $('modal-err').textContent = e.message;
+      $('modal-err').textContent = host ? `${e.message} (${host})` : e.message;
     }
   }
 
@@ -787,6 +812,10 @@
   }
 
   function boot() {
+    if (location.protocol === 'http:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+      location.replace('https://' + location.host + location.pathname + location.search + location.hash);
+      return;
+    }
     initThree();
     wireUI();
     requestAnimationFrame(animate);
