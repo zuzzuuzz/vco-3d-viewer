@@ -634,18 +634,30 @@
 
   async function fetchIIWGL(rawUrl, pwd, title) {
     const url = normalizeMlink(rawUrl);
+    let isCasesHost = false;
+    try { isCasesHost = new URL(url, location.href).hostname.toLowerCase() === 'cases.vcconnect.link'; } catch (_) {}
     $('entry-modal').classList.add('hidden');
     $('loader-overlay').classList.remove('hidden');
+    $('loader-msg').textContent = 'Downloading 3D case\u2026';
     $('prog-fill').style.width = '5%';
     try {
-      let res;
-      try {
-        res = await fetch(url);
-      } catch (_) {
-        await new Promise(r => setTimeout(r, 800));
-        res = await fetch(url);
+      const doFetch = async target => {
+        try {
+          return await fetch(target);
+        } catch (_) {
+          await new Promise(r => setTimeout(r, 800));
+          return await fetch(target);
+        }
+      };
+      let res = await doFetch(url);
+      for (let retry = 1; res.status === 404 && isCasesHost && retry <= 10; retry++) {
+        $('loader-msg').textContent = 'Finalizing cloud upload\u2026';
+        await new Promise(r => setTimeout(r, 2500));
+        const sep = url.includes('?') ? '&' : '?';
+        res = await doFetch(`${url}${sep}r=${retry}`);
       }
       if (!res.ok) throw new Error(`HTTP ${res.status} loading case`);
+      $('loader-msg').textContent = 'Downloading 3D case\u2026';
       const total = parseInt(res.headers.get('content-length') || '0', 10);
       const reader = res.body && res.body.getReader ? res.body.getReader() : null;
       let buf;
