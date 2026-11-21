@@ -15,7 +15,7 @@ export function parseCaseKey(pathname) {
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (!url.pathname.startsWith('/cases/')) {
       return new Response('Not Found', { status: 404 });
@@ -28,9 +28,31 @@ export default {
       return new Response('Bad Request', { status: 400 });
     }
 
-    const obj = request.method === 'HEAD'
-      ? await env.CASES_BUCKET.head(key)
-      : await env.CASES_BUCKET.get(key);
+    const cache = typeof caches !== 'undefined' ? caches.default : null;
+    const cacheKey = new Request(url.origin + url.pathname, { method: 'GET' });
+    const inm = request.headers.get('if-none-match');
+    if (request.method === 'GET' && cache) {
+      const cached = await cache.match(cacheKey);
+      if (cached) {
+        if (inm && cached.headers.get('etag') === inm) {
+          cached.body?.cancel?.().catch(() => {});
+          return new Response(null, { status: 304, headers: cached.headers });
+        }
+        return cached;
+      }
+    }
+
+    let obj;
+    try {
+      obj = request.method === 'HEAD'
+        ? await env.CASES_BUCKET.head(key)
+        : await env.CASES_BUCKET.get(key);
+    } catch {
+      return new Response('Upstream storage error', {
+        status: 502,
+        headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' },
+      });
+    }
     if (!obj) {
       return new Response('Not Found', {
         status: 404,
@@ -48,6 +70,17 @@ export default {
     headers.set('content-length', String(obj.size));
     headers.set('x-content-type-options', 'nosniff');
 
-    return new Response(request.method === 'HEAD' ? null : obj.body, { status: 200, headers });
+    if (obj.httpEtag && inm === obj.httpEtag) {
+      obj.body?.cancel?.().catch(() => {});
+      return new Response(null, { status: 304, headers });
+    }
+
+    const res = new Response(request.method === 'HEAD' ? null : obj.body, { status: 200, headers });
+    if (request.method === 'GET' && cache && !/no-cache|no-store/i.test(headers.get('cache-control') || '')) {
+      const put = cache.put(cacheKey, res.clone()).catch(() => {});
+      if (ctx?.waitUntil) ctx.waitUntil(put);
+      else await put;
+    }
+    return res;
   },
 };

@@ -73,6 +73,7 @@
   }
 
   function isEncrypted(buffer) {
+    if (!buffer || buffer.byteLength < 16) throw new Error('Invalid or empty .iiwgl file');
     const dv = new DataView(buffer);
     const magic = dv.getUint32(0, true);
     if (magic === 1229539148) throw new Error('Unsupported big-endian .iiwgl file');
@@ -126,10 +127,11 @@
 
   function parseIIWGL(buffer, password) {
     const CTMRef = (typeof globalThis !== 'undefined' && globalThis.CTM) || require('./vendor/openctm').CTM;
+    const encrypted = isEncrypted(buffer);
     const rawView = new DataView(buffer);
     const ver = rawView.getUint32(4, true);
     let bytes;
-    if (isEncrypted(buffer)) {
+    if (encrypted) {
       if (password === undefined || password === null) {
         const err = new Error('Password required to open encrypted .iiwgl');
         err.code = 'NEED_PASSWORD'; throw err;

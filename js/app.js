@@ -40,7 +40,16 @@
 
   function initThree() {
     const vp = $('viewport');
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+    try {
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+    } catch (_) {
+      try {
+        renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
+      } catch (_) {
+        renderer = null;
+        return false;
+      }
+    }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.setSize(vp.clientWidth, vp.clientHeight);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -49,6 +58,15 @@
     renderer.localClippingEnabled = true;
     renderer.setScissorTest(false);
     vp.appendChild(renderer.domElement);
+    renderer.domElement.addEventListener('webglcontextlost', ev => {
+      ev.preventDefault();
+      S.playing = false;
+      updatePlayIcons();
+    });
+    renderer.domElement.addEventListener('webglcontextrestored', () => {
+      onResize();
+      if (S.model) applyFrame(S.frame, true);
+    });
 
     scene = new THREE.Scene();
     clipPlane = new THREE.Plane(new THREE.Vector3(1, 0, 0), 1e5);
@@ -91,6 +109,7 @@
     window.addEventListener('resize', onResize);
     renderer.domElement.addEventListener('pointerdown', ev => { ptrDown = { x: ev.clientX, y: ev.clientY, btn: ev.button }; });
     renderer.domElement.addEventListener('pointerup', onCanvasClick);
+    return true;
   }
 
   function updateCamProjection(aspect, radius) {
@@ -103,6 +122,7 @@
   }
 
   function onResize() {
+    if (!renderer) return;
     const vp = $('viewport');
     renderer.setSize(vp.clientWidth, vp.clientHeight);
     updateCamProjection(vp.clientWidth / Math.max(1, vp.clientHeight));
@@ -542,6 +562,7 @@
   }
 
   function animate(now) {
+    if (!renderer) return;
     requestAnimationFrame(animate);
     const dt = S.lastTick ? Math.min(0.05, (now - S.lastTick) / 1000) : 0.016;
     S.lastTick = now;
@@ -597,22 +618,26 @@
     S.pendingBuf = { buf, title };
     try {
       const model = IIWGL.parseIIWGL(buf, pwd);
+      S.pendingBuf = null;
       $('entry-modal').classList.add('hidden');
       $('loader-overlay').classList.add('hidden');
       loadModel(model, title);
     } catch (err) {
+      const needPwd = err.code === 'NEED_PASSWORD' || err.code === 'BAD_PASSWORD';
+      if (!needPwd) S.pendingBuf = null;
       $('loader-overlay').classList.add('hidden');
       $('entry-modal').classList.remove('hidden');
-      $('pwd-input').style.display = 'block';
-      $('pwd-submit').style.display = 'block';
+      $('pwd-input').style.display = needPwd ? 'block' : 'none';
+      $('pwd-submit').style.display = needPwd ? 'block' : 'none';
       if (err.code === 'NEED_PASSWORD') {
         $('modal-title').textContent = 'Encrypted Case';
         $('modal-desc').textContent = 'Enter the OnyxCeph WebExport password to unlock this 3D setup.';
         $('modal-err').textContent = '';
       } else {
+        if (!needPwd) $('modal-title').textContent = 'Load 3D Treatment Plan';
         $('modal-err').textContent = err.message || 'Unable to parse .iiwgl file';
       }
-      $('pwd-input').focus();
+      if (needPwd) $('pwd-input').focus();
     }
   }
 
@@ -646,27 +671,10 @@
     $('loader-msg').textContent = 'Downloading 3D case\u2026';
     $('prog-fill').style.width = '5%';
     try {
-      const doFetch = async target => {
-        try {
-          return await fetch(target);
-        } catch (_) {
-          await new Promise(r => setTimeout(r, 800));
-          return await fetch(target);
-        }
-      };
-      let res = await doFetch(fetchUrl);
-      for (let retry = 1; res.status === 404 && isCasesHost && retry <= 10; retry++) {
-        $('loader-msg').textContent = 'Finalizing cloud upload\u2026';
-        await new Promise(r => setTimeout(r, 2500));
-        const sep = fetchUrl.includes('?') ? '&' : '?';
-        res = await doFetch(`${fetchUrl}${sep}r=${retry}`);
-      }
-      if (!res.ok) throw new Error(`HTTP ${res.status} loading case`);
-      $('loader-msg').textContent = 'Downloading 3D case\u2026';
-      const total = parseInt(res.headers.get('content-length') || '0', 10);
-      const reader = res.body && res.body.getReader ? res.body.getReader() : null;
-      let buf;
-      if (reader) {
+      const readBody = async res => {
+        const total = parseInt(res.headers.get('content-length') || '0', 10);
+        const reader = res.body && res.body.getReader ? res.body.getReader() : null;
+        if (!reader) return await res.arrayBuffer();
         const chunks = []; let got = 0;
         while (true) {
           const { done, value } = await reader.read();
@@ -676,18 +684,49 @@
         }
         const merged = new Uint8Array(got); let off = 0;
         for (const c of chunks) { merged.set(c, off); off += c.length; }
-        buf = merged.buffer;
-      } else {
-        buf = await res.arrayBuffer();
+        return merged.buffer;
+      };
+      const fetchAndRead = async (target, prefetched) => {
+        const delays = [500, 1500];
+        for (let attempt = 0; attempt <= delays.length; attempt++) {
+          try {
+            const res = (attempt === 0 && prefetched) ? await prefetched : await fetch(target);
+            if (res.status === 404) {
+              await res.body?.cancel?.();
+              return { status: 404, buf: null };
+            }
+            if (res.ok) return { status: res.status, buf: await readBody(res) };
+            if (res.status < 500 || attempt === delays.length) throw new Error(`HTTP ${res.status} loading case`);
+          } catch (err) {
+            if (attempt === delays.length) throw err;
+          }
+          await new Promise(r => setTimeout(r, delays[attempt]));
+        }
+      };
+
+      let prefetch = null;
+      if (window.__casePrefetch && window.__casePrefetch.url === fetchUrl) {
+        prefetch = window.__casePrefetch.promise;
+        window.__casePrefetch = null;
       }
+      let out = await fetchAndRead(fetchUrl, prefetch);
+      for (let retry = 1; out.status === 404 && isCasesHost && retry <= 16; retry++) {
+        $('loader-msg').textContent = 'Finalizing cloud upload\u2026';
+        await new Promise(r => setTimeout(r, retry <= 4 ? 1500 : 2500));
+        const sep = fetchUrl.includes('?') ? '&' : '?';
+        out = await fetchAndRead(`${fetchUrl}${sep}r=${retry}`, null);
+      }
+      if (out.status === 404) throw new Error('HTTP 404 loading case');
       $('prog-fill').style.width = '100%';
       $('loader-msg').textContent = 'Decoding OpenCTM meshes...';
-      requestAnimationFrame(() => tryOpenBuffer(buf, pwd, title));
+      requestAnimationFrame(() => tryOpenBuffer(out.buf, pwd, title));
     } catch (e) {
       let host = '';
       try { host = new URL(fetchUrl, location.href).host; } catch (_) {}
       $('loader-overlay').classList.add('hidden');
       $('entry-modal').classList.remove('hidden');
+      $('pwd-input').style.display = 'none';
+      $('pwd-submit').style.display = 'none';
       $('modal-err').textContent = host ? `${e.message} (${host})` : e.message;
     }
   }
@@ -833,7 +872,11 @@
       location.replace('https://' + location.host + location.pathname + location.search + location.hash);
       return;
     }
-    initThree();
+    if (!initThree()) {
+      $('entry-modal').classList.remove('hidden');
+      $('modal-err').textContent = 'WebGL 3D is unavailable or disabled in this browser.';
+      return;
+    }
     wireUI();
     requestAnimationFrame(animate);
     const qs = new URLSearchParams(location.search);
