@@ -1,0 +1,17 @@
+{
+  "name": "vco-3d-viewer",
+  "main": "worker.js",
+  "compatibility_date": "2026-11-19",
+  "assets": {
+    "directory": "."
+  },
+  "r2_buckets": [
+    {
+      "binding": "CASES_BUCKET",
+      "bucket_name": "velourcare-cases"
+    }
+  ],
+  "observability": {
+    "enabled": true
+  }
+}

@@ -634,8 +634,13 @@
 
   async function fetchIIWGL(rawUrl, pwd, title) {
     const url = normalizeMlink(rawUrl);
-    let isCasesHost = false;
-    try { isCasesHost = new URL(url, location.href).hostname.toLowerCase() === 'cases.vcconnect.link'; } catch (_) {}
+    let parsed = null;
+    try { parsed = new URL(url, location.href); } catch (_) {}
+    const isCasesHost = !!(parsed && parsed.hostname.toLowerCase() === 'cases.vcconnect.link');
+    // Route R2 cases same-origin on the Worker host so HTTP/3 avoids TCP ECH resets on cases.vcconnect.link.
+    const useSameOrigin = isCasesHost &&
+      (location.hostname === 'viewer.vcconnect.link' || location.hostname.endsWith('.workers.dev'));
+    const fetchUrl = useSameOrigin ? `${location.origin}/cases${parsed.pathname}` : url;
     $('entry-modal').classList.add('hidden');
     $('loader-overlay').classList.remove('hidden');
     $('loader-msg').textContent = 'Downloading 3D case\u2026';
@@ -649,12 +654,12 @@
           return await fetch(target);
         }
       };
-      let res = await doFetch(url);
+      let res = await doFetch(fetchUrl);
       for (let retry = 1; res.status === 404 && isCasesHost && retry <= 10; retry++) {
         $('loader-msg').textContent = 'Finalizing cloud upload\u2026';
         await new Promise(r => setTimeout(r, 2500));
-        const sep = url.includes('?') ? '&' : '?';
-        res = await doFetch(`${url}${sep}r=${retry}`);
+        const sep = fetchUrl.includes('?') ? '&' : '?';
+        res = await doFetch(`${fetchUrl}${sep}r=${retry}`);
       }
       if (!res.ok) throw new Error(`HTTP ${res.status} loading case`);
       $('loader-msg').textContent = 'Downloading 3D case\u2026';
@@ -680,7 +685,7 @@
       requestAnimationFrame(() => tryOpenBuffer(buf, pwd, title));
     } catch (e) {
       let host = '';
-      try { host = new URL(url, location.href).host; } catch (_) {}
+      try { host = new URL(fetchUrl, location.href).host; } catch (_) {}
       $('loader-overlay').classList.add('hidden');
       $('entry-modal').classList.remove('hidden');
       $('modal-err').textContent = host ? `${e.message} (${host})` : e.message;
