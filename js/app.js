@@ -1865,9 +1865,10 @@
         window.__casePrefetch = null;
       }
       let out = await fetchAndRead(fetchUrl, prefetch);
-      for (let retry = 1; out.status === 404 && isCasesHost && retry <= 16; retry++) {
+      for (let retry = 1; out.status === 404 && isCasesHost && retry <= 36; retry++) {
         $('loader-msg').textContent = I18N[S.lang].finMsg;
-        await new Promise(r => setTimeout(r, retry <= 4 ? 1500 : 2500));
+        $('prog-fill').style.width = `${Math.min(45, 5 + retry)}%`;
+        await new Promise(r => setTimeout(r, retry <= 4 ? 1500 : retry <= 16 ? 2500 : 3000));
         const sep = fetchUrl.includes('?') ? '&' : '?';
         out = await fetchAndRead(`${fetchUrl}${sep}r=${retry}`, null);
       }
