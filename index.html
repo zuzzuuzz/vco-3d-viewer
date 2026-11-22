@@ -34,7 +34,7 @@
       } catch (_) {}
     })();
   </script>
-  <link rel="stylesheet" href="css/viewer.css?v=13">
+  <link rel="stylesheet" href="css/viewer.css?v=15">
 </head>
 <body>
   <div id="viewport"></div>
@@ -182,15 +182,24 @@
 
   <!-- Top-Center Floating Identity Pill -->
   <header class="top-banner glass">
-    <img src="assets/vc-connect-logo.svg" alt="VélourCare Ortho" class="brand-logo logo-dark" decoding="async">
-    <img src="assets/vc-connect-logo-dark.svg" alt="VélourCare Ortho" class="brand-logo logo-light" decoding="async">
-    <div class="case-meta">
-      <div id="case-title" class="case-title">3D Treatment Simulation</div>
-      <div id="case-sub" class="case-sub">3D Treatment Setup</div>
+    <div class="brand-bar">
+      <img src="assets/vc-connect-square.png" alt="VC Connect" class="brand-mark" decoding="async">
+      <div class="brand-lockup">
+        <div class="brand-name">VC <span class="brand-gold">CONNECT</span></div>
+        <div class="brand-sub">VELOURCARE ORTHO CLOUD</div>
+      </div>
     </div>
-    <div class="lang-seg" role="group" aria-label="Language">
-      <button id="lang-en" class="active" data-lang="en">EN</button>
-      <button id="lang-fr" data-lang="fr">FR</button>
+    <div class="lang-wrap">
+      <button id="lang-btn" class="lang-trigger" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Language">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"/><path d="M3.6 9h16.8M3.6 15h16.8"/><path d="M12 3a13 13 0 0 0 0 18M12 3a13 13 0 0 1 0 18"/>
+        </svg>
+        <span id="lang-code">EN</span>
+        <svg class="lang-chev" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="6 8 10 12 14 8"/>
+        </svg>
+      </button>
+      <div id="lang-menu" class="lang-menu glass hidden" role="listbox" aria-label="Select Language"></div>
     </div>
     <input id="file-input" type="file" accept=".iiwgl,.unencrypted" hidden>
   </header>
@@ -264,8 +273,13 @@
   <!-- Loading Overlay -->
   <div id="loader-overlay" class="overlay-backdrop hidden">
     <div class="modal-card glass">
-      <img src="assets/vc-connect-logo.svg" alt="VélourCare Ortho" class="brand-logo logo-dark" style="height:34px" decoding="async">
-      <img src="assets/vc-connect-logo-dark.svg" alt="VélourCare Ortho" class="brand-logo logo-light" style="height:34px" decoding="async">
+      <div class="brand-bar modal-brand">
+        <img src="assets/vc-connect-square.png" alt="VC Connect" class="brand-mark" decoding="async">
+        <div class="brand-lockup">
+          <div class="brand-name">VC <span class="brand-gold">CONNECT</span></div>
+          <div class="brand-sub">VELOURCARE ORTHO CLOUD</div>
+        </div>
+      </div>
       <p id="loader-msg">Downloading 3D treatment plan...</p>
       <div class="prog-track"><div id="prog-fill" class="prog-fill"></div></div>
     </div>
@@ -274,8 +288,13 @@
   <!-- Dropzone / Password Modal -->
   <div id="entry-modal" class="overlay-backdrop hidden">
     <div class="modal-card glass">
-      <img src="assets/vc-connect-logo.svg" alt="VélourCare Ortho" class="brand-logo logo-dark" style="height:32px" decoding="async">
-      <img src="assets/vc-connect-logo-dark.svg" alt="VélourCare Ortho" class="brand-logo logo-light" style="height:32px" decoding="async">
+      <div class="brand-bar modal-brand">
+        <img src="assets/vc-connect-square.png" alt="VC Connect" class="brand-mark" decoding="async">
+        <div class="brand-lockup">
+          <div class="brand-name">VC <span class="brand-gold">CONNECT</span></div>
+          <div class="brand-sub">VELOURCARE ORTHO CLOUD</div>
+        </div>
+      </div>
       <h2 id="modal-title">Load 3D Treatment Plan</h2>
       <p id="modal-desc">Drop an OnyxCeph <code>.iiwgl</code> export here or select a file to inspect.</p>
       <div id="drop-zone" class="drop-zone">Click or drag &amp; drop a <strong>.iiwgl</strong> file</div>
@@ -289,6 +308,6 @@
   <script defer src="js/vendor/OrbitControls.js"></script>
   <script defer src="js/vendor/openctm.js"></script>
   <script defer src="js/iiwgl.js?v=11"></script>
-  <script defer src="js/app.js?v=20"></script>
+  <script defer src="js/app.js?v=22"></script>
 </body>
 </html>

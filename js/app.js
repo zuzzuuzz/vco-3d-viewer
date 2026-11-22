@@ -7,6 +7,18 @@
   const $ = id => document.getElementById(id);
   const railWidth = () => (window.innerWidth <= 768 ? 50 : 64);
 
+  const LANGS = [
+    { code: 'en', label: 'EN', name: 'English' },
+    { code: 'zh', label: 'ZH', name: '中文' },
+    { code: 'es', label: 'ES', name: 'Español' },
+    { code: 'fr', label: 'FR', name: 'Français' },
+    { code: 'de', label: 'DE', name: 'Deutsch' },
+    { code: 'ar', label: 'AR', name: 'العربية' },
+    { code: 'bn', label: 'BN', name: 'বাংলা' },
+    { code: 'pt', label: 'PT', name: 'Português' },
+    { code: 'ru', label: 'RU', name: 'Русский' }
+  ];
+
   const I18N = {
     en: {
       views: {
@@ -19,10 +31,10 @@
         clip: 'Cross-Section Slicer (C)', compare: 'Split Compare', panel: 'Clinical Analytics',
         export: 'Export', open: 'Open .iiwgl', theme: 'Light / Dark Theme'
       },
-      setupSub: '3D Treatment Setup', stepsLabel: 'Steps', staticLabel: 'Static 3D',
+      setupSub: 'VC Connect', stepsLabel: 'Steps', staticLabel: 'Static 3D',
       ctrlFirst: 'First Stage', ctrlPrev: 'Previous Stage', ctrlPlay: 'Play / Pause',
       ctrlNext: 'Next Stage', ctrlLast: 'Final Stage', ctrlLoop: 'Loop Playback',
-      dlMsg: 'Downloading 3D case\u2026', finMsg: 'Finalizing cloud upload\u2026', decMsg: 'Decoding 3D meshes\u2026',
+      dlMsg: 'Downloading 3D case…', finMsg: 'Finalizing cloud upload…', decMsg: 'Decoding 3D meshes…',
       loadTitle: 'Load 3D Treatment Plan',
       loadDesc: 'Drop an OnyxCeph <code>.iiwgl</code> export here or select a file to inspect.',
       dropZone: 'Click or drag &amp; drop a <strong>.iiwgl</strong> file',
@@ -35,7 +47,65 @@
       rulerHint: 'Click 2 points', stepPauseOn: 'Step pause ON', stepPauseOff: 'Step pause OFF',
       noIpr: 'No IPR contacts in this case', stlOk: 'STL exported', pngOk: 'PNG saved', jsonOk: 'JSON exported',
       attFull: 'Attachments: Full', attSubtle: 'Attachments: Subtle', attOff: 'Attachments: Hidden',
-      cmpInitial: 'Initial \u00b7 Step 0', stepWord: 'Step'
+      cmpInitial: 'Initial · Step 0', stepWord: 'Step'
+    },
+    zh: {
+      views: {
+        front: '正面', upper: '上颌', lower: '下颌', left: '左侧', right: '右侧',
+        maxilla: '上牙弓', mandible: '下牙弓', occlusion: '咬合', multi: '多视图'
+      },
+      tips: {
+        att: '附件', ipr: '邻面去釉 / IPR', contact: '咬合接触 (H)',
+        ghost: '初始透明参照', grid: '网格 / 1mm 标尺 (G)', caliper: '3D 测距尺 (M)',
+        clip: '剖面切片 (C)', compare: '分屏对比', panel: '临床分析',
+        export: '导出', open: '打开 .iiwgl', theme: '浅色 / 深色主题'
+      },
+      setupSub: 'VC Connect', stepsLabel: '步数', staticLabel: '静态 3D',
+      ctrlFirst: '第一步', ctrlPrev: '上一步', ctrlPlay: '播放 / 暂停',
+      ctrlNext: '下一步', ctrlLast: '最后一步', ctrlLoop: '循环播放',
+      dlMsg: '正在下载 3D 病例…', finMsg: '正在完成云端上传…', decMsg: '正在解码 3D 网格…',
+      loadTitle: '加载 3D 矫治方案',
+      loadDesc: '将 OnyxCeph <code>.iiwgl</code> 文件拖放到此处或点击选择。',
+      dropZone: '点击或拖放 <strong>.iiwgl</strong> 文件',
+      encTitle: '加密病例',
+      encDesc: '请输入病例密码以解锁此 3D 矫治方案。',
+      pwdPlaceholder: '病例密码', unlockBtn: '解锁并渲染',
+      clipTitle: '剖面切片', clipOff: '关闭', clipAxial: '水平', clipSag: '矢状', clipCor: '冠状', clipFlip: '翻转',
+      expTitle: '导出', expStl: 'STL 网格（当前步）', expPng: 'PNG 截图', expJson: '临床 JSON 报告',
+      drawerTitle: '临床分析', tabMov: '牙齿移动', tabBol: 'Bolton / 去釉', tabAna: '解剖结构',
+      rulerHint: '点击 2 个点', stepPauseOn: '分步暂停 开启', stepPauseOff: '分步暂停 关闭',
+      noIpr: '本病例无邻面去釉', stlOk: '已导出 STL', pngOk: '已保存 PNG', jsonOk: '已导出 JSON',
+      attFull: '附件：完整显示', attSubtle: '附件：淡化显示', attOff: '附件：已隐藏',
+      cmpInitial: '初始 · 第 0 步', stepWord: '第'
+    },
+    es: {
+      views: {
+        front: 'Frente', upper: 'Sup.', lower: 'Inf.', left: 'Izq.', right: 'Der.',
+        maxilla: 'Maxil.', mandible: 'Mandíb.', occlusion: 'Oclus.', multi: 'Multi'
+      },
+      tips: {
+        att: 'Ataches', ipr: 'IPR / Stripping', contact: 'Contactos Oclusales (H)',
+        ghost: 'Fantasma Paso 0', grid: 'Cuadrícula / Regla 1mm (G)', caliper: 'Regla 3D (M)',
+        clip: 'Plano de Corte (C)', compare: 'Comparación Split', panel: 'Analítica Clínica',
+        export: 'Exportar', open: 'Abrir .iiwgl', theme: 'Tema Claro / Oscuro'
+      },
+      setupSub: 'VC Connect', stepsLabel: 'Pasos', staticLabel: '3D Estático',
+      ctrlFirst: 'Primer Paso', ctrlPrev: 'Paso Anterior', ctrlPlay: 'Reproducir / Pausa',
+      ctrlNext: 'Siguiente Paso', ctrlLast: 'Último Paso', ctrlLoop: 'Reproducción en Bucle',
+      dlMsg: 'Descargando caso 3D…', finMsg: 'Finalizando carga en la nube…', decMsg: 'Decodificando mallas 3D…',
+      loadTitle: 'Cargar Plan de Tratamiento 3D',
+      loadDesc: 'Suelta aquí un archivo OnyxCeph <code>.iiwgl</code> o selecciona uno.',
+      dropZone: 'Haz clic o arrastra un archivo <strong>.iiwgl</strong>',
+      encTitle: 'Caso Protegido',
+      encDesc: 'Introduce la contraseña del caso para ver la simulación 3D.',
+      pwdPlaceholder: 'Contraseña del caso', unlockBtn: 'Desbloquear y Mostrar',
+      clipTitle: 'Plano de Corte', clipOff: 'Off', clipAxial: 'Axial', clipSag: 'Sagital', clipCor: 'Coronal', clipFlip: 'Invertir',
+      expTitle: 'Exportar', expStl: 'Malla STL (Paso actual)', expPng: 'Captura PNG', expJson: 'Informe JSON Clínico',
+      drawerTitle: 'Analítica Clínica', tabMov: 'Movimientos', tabBol: 'Bolton / IPR', tabAna: 'Anatomía',
+      rulerHint: 'Haz clic en 2 puntos', stepPauseOn: 'Pausa por paso ON', stepPauseOff: 'Pausa por paso OFF',
+      noIpr: 'Sin IPR en este caso', stlOk: 'STL exportado', pngOk: 'PNG guardado', jsonOk: 'JSON exportado',
+      attFull: 'Ataches: Completos', attSubtle: 'Ataches: Sutiles', attOff: 'Ataches: Ocultos',
+      cmpInitial: 'Inicial · Paso 0', stepWord: 'Paso'
     },
     fr: {
       views: {
@@ -44,32 +114,177 @@
       },
       tips: {
         att: 'Taquets', ipr: 'R.I.P. / Stripping', contact: 'Contacts Occlusaux (H)',
-        ghost: 'Fant\u00f4me \u00c9tape 0', grid: 'Grille / R\u00e8gle 1mm (G)', caliper: 'R\u00e8gle 3D (M)',
+        ghost: 'Fantôme Étape 0', grid: 'Grille / Règle 1mm (G)', caliper: 'Règle 3D (M)',
         clip: 'Plan de Coupe (C)', compare: 'Comparaison Split', panel: 'Analyse Clinique',
-        export: 'Exporter', open: 'Ouvrir .iiwgl', theme: 'Th\u00e8me Clair / Sombre'
+        export: 'Exporter', open: 'Ouvrir .iiwgl', theme: 'Thème Clair / Sombre'
       },
-      setupSub: 'Simulation 3D', stepsLabel: '\u00c9tapes', staticLabel: '3D Statique',
-      ctrlFirst: 'Premi\u00e8re \u00e9tape', ctrlPrev: '\u00c9tape pr\u00e9c\u00e9dente', ctrlPlay: 'Lecture / Pause',
-      ctrlNext: '\u00c9tape suivante', ctrlLast: 'Derni\u00e8re \u00e9tape', ctrlLoop: 'Lecture en boucle',
-      dlMsg: 'T\u00e9l\u00e9chargement du cas 3D\u2026', finMsg: 'Finalisation de l\u2019envoi cloud\u2026', decMsg: 'D\u00e9codage des mod\u00e8les 3D\u2026',
+      setupSub: 'VC Connect', stepsLabel: 'Étapes', staticLabel: '3D Statique',
+      ctrlFirst: 'Première étape', ctrlPrev: 'Étape précédente', ctrlPlay: 'Lecture / Pause',
+      ctrlNext: 'Étape suivante', ctrlLast: 'Dernière étape', ctrlLoop: 'Lecture en boucle',
+      dlMsg: 'Téléchargement du cas 3D…', finMsg: 'Finalisation de l’envoi cloud…', decMsg: 'Décodage des modèles 3D…',
       loadTitle: 'Charger un Plan de Traitement 3D',
-      loadDesc: 'D\u00e9posez un fichier <code>.iiwgl</code> ici ou cliquez pour le s\u00e9lectionner.',
+      loadDesc: 'Déposez un fichier <code>.iiwgl</code> ici ou cliquez pour le sélectionner.',
       dropZone: 'Cliquez ou glissez un fichier <strong>.iiwgl</strong>',
-      encTitle: 'Cas Prot\u00e9g\u00e9',
+      encTitle: 'Cas Protégé',
       encDesc: 'Entrez le mot de passe du cas pour afficher la simulation 3D.',
-      pwdPlaceholder: 'Mot de passe', unlockBtn: 'D\u00e9verrouiller',
+      pwdPlaceholder: 'Mot de passe', unlockBtn: 'Déverrouiller',
       clipTitle: 'Plan de Coupe', clipOff: 'Off', clipAxial: 'Axial', clipSag: 'Sagittal', clipCor: 'Coronal', clipFlip: 'Inverser',
-      expTitle: 'Exporter', expStl: 'Maillage STL (\u00c9tape active)', expPng: 'Capture PNG', expJson: 'Rapport JSON Clinique',
+      expTitle: 'Exporter', expStl: 'Maillage STL (Étape active)', expPng: 'Capture PNG', expJson: 'Rapport JSON Clinique',
       drawerTitle: 'Analyse Clinique', tabMov: 'Mouvements', tabBol: 'Bolton / R.I.P.', tabAna: 'Anatomie',
-      rulerHint: 'Cliquez 2 points', stepPauseOn: 'Pause par \u00e9tape ON', stepPauseOff: 'Pause par \u00e9tape OFF',
-      noIpr: 'Aucun R.I.P. d\u00e9tect\u00e9', stlOk: 'STL export\u00e9', pngOk: 'PNG enregistr\u00e9', jsonOk: 'JSON export\u00e9',
-      attFull: 'Taquets : Complets', attSubtle: 'Taquets : Discrets', attOff: 'Taquets : Masqu\u00e9s',
-      cmpInitial: 'Initial \u00b7 \u00c9tape 0', stepWord: '\u00c9tape'
+      rulerHint: 'Cliquez 2 points', stepPauseOn: 'Pause par étape ON', stepPauseOff: 'Pause par étape OFF',
+      noIpr: 'Aucun R.I.P. détecté', stlOk: 'STL exporté', pngOk: 'PNG enregistré', jsonOk: 'JSON exporté',
+      attFull: 'Taquets : Complets', attSubtle: 'Taquets : Discrets', attOff: 'Taquets : Masqués',
+      cmpInitial: 'Initial · Étape 0', stepWord: 'Étape'
+    },
+    de: {
+      views: {
+        front: 'Front', upper: 'Oben', lower: 'Unten', left: 'Links', right: 'Rechts',
+        maxilla: 'OK', mandible: 'UK', occlusion: 'Okkl.', multi: 'Multi'
+      },
+      tips: {
+        att: 'Attachments', ipr: 'ASR / IPR', contact: 'Okklusionskontakte (H)',
+        ghost: 'Schritt-0-Geist', grid: 'Raster / 1mm-Lineal (G)', caliper: '3D-Lineal (M)',
+        clip: 'Querschnitt (C)', compare: 'Split-Vergleich', panel: 'Klinische Analyse',
+        export: 'Exportieren', open: '.iiwgl öffnen', theme: 'Hell- / Dunkelmodus'
+      },
+      setupSub: 'VC Connect', stepsLabel: 'Schritte', staticLabel: 'Statisches 3D',
+      ctrlFirst: 'Erster Schritt', ctrlPrev: 'Vorheriger Schritt', ctrlPlay: 'Start / Pause',
+      ctrlNext: 'Nächster Schritt', ctrlLast: 'Letzter Schritt', ctrlLoop: 'Endlosschleife',
+      dlMsg: '3D-Fall wird geladen…', finMsg: 'Cloud-Upload wird abgeschlossen…', decMsg: '3D-Modelle werden dekodiert…',
+      loadTitle: '3D-Behandlungsplan laden',
+      loadDesc: 'OnyxCeph <code>.iiwgl</code>-Datei hier ablegen oder auswählen.',
+      dropZone: 'Klicken oder <strong>.iiwgl</strong>-Datei hierher ziehen',
+      encTitle: 'Geschützter Fall',
+      encDesc: 'Fallpasswort eingeben, um diese 3D-Simulation zu öffnen.',
+      pwdPlaceholder: 'Fallpasswort', unlockBtn: 'Entsperren & Anzeigen',
+      clipTitle: 'Querschnitt', clipOff: 'Aus', clipAxial: 'Axial', clipSag: 'Sagittal', clipCor: 'Koronal', clipFlip: 'Umkehren',
+      expTitle: 'Exportieren', expStl: 'STL-Netz (Aktueller Schritt)', expPng: 'Screenshot PNG', expJson: 'Klinischer JSON-Bericht',
+      drawerTitle: 'Klinische Analyse', tabMov: 'Bewegungen', tabBol: 'Bolton / ASR', tabAna: 'Anatomie',
+      rulerHint: '2 Punkte anklicken', stepPauseOn: 'Schrittpause EIN', stepPauseOff: 'Schrittpause AUS',
+      noIpr: 'Keine ASR / IPR in diesem Fall', stlOk: 'STL exportiert', pngOk: 'PNG gespeichert', jsonOk: 'JSON exportiert',
+      attFull: 'Attachments: Voll', attSubtle: 'Attachments: Dezent', attOff: 'Attachments: Ausgeblendet',
+      cmpInitial: 'Start · Schritt 0', stepWord: 'Schritt'
+    },
+    ar: {
+      views: {
+        front: 'أمامي', upper: 'علوي', lower: 'سفلي', left: 'يسار', right: 'يمين',
+        maxilla: 'الفك ع', mandible: 'الفك س', occlusion: 'الإطباق', multi: 'متعدد'
+      },
+      tips: {
+        att: 'المرفقات', ipr: 'برد بين الأسنان / IPR', contact: 'نقاط الإطباق (H)',
+        ghost: 'شبح المرحلة 0', grid: 'شبكة / مسطرة 1مم (G)', caliper: 'مسطرة ثلاثية الأبعاد (M)',
+        clip: 'قاطع المقطع العرضي (C)', compare: 'مقارنة منقسمة', panel: 'التحليل السريري',
+        export: 'تصدير', open: 'فتح .iiwgl', theme: 'المظهر الفاتح / الداكن'
+      },
+      setupSub: 'VC Connect', stepsLabel: 'مراحل', staticLabel: 'ثلاثي الأبعاد ثابت',
+      ctrlFirst: 'المرحلة الأولى', ctrlPrev: 'المرحلة السابقة', ctrlPlay: 'تشغيل / إيقاف مؤقت',
+      ctrlNext: 'المرحلة التالية', ctrlLast: 'المرحلة الأخيرة', ctrlLoop: 'تشغيل متكرر',
+      dlMsg: 'جارٍ تنزيل الحالة ثلاثية الأبعاد…', finMsg: 'جارٍ إتمام الرفع السحابي…', decMsg: 'جارٍ فك ترميز النماذج ثلاثية الأبعاد…',
+      loadTitle: 'تحميل خطة العلاج ثلاثية الأبعاد',
+      loadDesc: 'أسقط ملف OnyxCeph <code>.iiwgl</code> هنا أو اختر ملفًا.',
+      dropZone: 'انقر أو اسحب وأفلت ملف <strong>.iiwgl</strong>',
+      encTitle: 'حالة مشفرة',
+      encDesc: 'أدخل كلمة مرور الحالة لعرض الخطة ثلاثية الأبعاد.',
+      pwdPlaceholder: 'كلمة مرور الحالة', unlockBtn: 'فتح وعرض',
+      clipTitle: 'قاطع المقطع العرضي', clipOff: 'إيقاف', clipAxial: 'محوري', clipSag: 'سهمي', clipCor: 'إكليلي', clipFlip: 'عكس',
+      expTitle: 'تصدير', expStl: 'نموذج STL (المرحلة الحالية)', expPng: 'لقطة شاشة PNG', expJson: 'تقرير JSON السريري',
+      drawerTitle: 'التحليل السريري', tabMov: 'الحركات', tabBol: 'Bolton / IPR', tabAna: 'التشريح',
+      rulerHint: 'انقر نقطتين', stepPauseOn: 'إيقاف كل مرحلة: مفعل', stepPauseOff: 'إيقاف كل مرحلة: معطل',
+      noIpr: 'لا يوجد IPR في هذه الحالة', stlOk: 'تم تصدير STL', pngOk: 'تم حفظ PNG', jsonOk: 'تم تصدير JSON',
+      attFull: 'المرفقات: كاملة', attSubtle: 'المرفقات: خفيفة', attOff: 'المرفقات: مخفية',
+      cmpInitial: 'المبدئي · المرحلة 0', stepWord: 'مرحلة'
+    },
+    bn: {
+      views: {
+        front: 'সামনে', upper: 'উপরের', lower: 'নিচের', left: 'বাম', right: 'ডান',
+        maxilla: 'ম্যাক্সিলা', mandible: 'ম্যান্ডিবল', occlusion: 'অক্লুশন', multi: 'মাল্টি'
+      },
+      tips: {
+        att: 'অ্যাটাচমেন্ট', ipr: 'IPR / স্ট্রিপিং', contact: 'অক্লুসাল কনট্যাক্ট (H)',
+        ghost: 'ধাপ ০ ঘোস্ট', grid: 'গ্রিড / 1mm রুলার (G)', caliper: '3D রুলার (M)',
+        clip: 'ক্রস-সেকশন স্লাইসার (C)', compare: 'স্প্লিট তুলনা', panel: 'ক্লিনিক্যাল অ্যানালিটিক্স',
+        export: 'এক্সপোর্ট', open: '.iiwgl খুলুন', theme: 'লাইট / ডার্ক থিম'
+      },
+      setupSub: 'VC Connect', stepsLabel: 'ধাপ', staticLabel: 'স্ট্যাটিক 3D',
+      ctrlFirst: 'প্রথম ধাপ', ctrlPrev: 'আগের ধাপ', ctrlPlay: 'চালু / বিরতি',
+      ctrlNext: 'পরের ধাপ', ctrlLast: 'শেষ ধাপ', ctrlLoop: 'লুপ প্লেব্যাক',
+      dlMsg: '3D কেস ডাউনলোড হচ্ছে…', finMsg: 'ক্লাউড আপলোড সম্পন্ন হচ্ছে…', decMsg: '3D মেশ ডিকোড হচ্ছে…',
+      loadTitle: '3D ট্রিটমেন্ট প্ল্যান লোড করুন',
+      loadDesc: 'এখানে OnyxCeph <code>.iiwgl</code> ফাইল ছাড়ুন বা বেছে নিন।',
+      dropZone: 'ক্লিক করুন বা <strong>.iiwgl</strong> ফাইল টেনে আনুন',
+      encTitle: 'এনক্রিপ্টেড কেস',
+      encDesc: 'এই 3D সেটআপ আনলক করতে পাসওয়ার্ড দিন।',
+      pwdPlaceholder: 'কেস পাসওয়ার্ড', unlockBtn: 'আনলক ও রেন্ডার',
+      clipTitle: 'ক্রস-সেকশন স্লাইসার', clipOff: 'বন্ধ', clipAxial: 'অ্যাক্সিয়াল', clipSag: 'স্যাজিটাল', clipCor: 'করোনাল', clipFlip: 'উল্টান',
+      expTitle: 'এক্সপোর্ট', expStl: 'STL মেশ (বর্তমান ধাপ)', expPng: 'স্ক্রিনশট PNG', expJson: 'ক্লিনিক্যাল JSON রিপোর্ট',
+      drawerTitle: 'ক্লিনিক্যাল অ্যানালিটিক্স', tabMov: 'মুভমেন্ট', tabBol: 'Bolton / IPR', tabAna: 'অ্যানাটমি',
+      rulerHint: '২টি পয়েন্টে ক্লিক করুন', stepPauseOn: 'ধাপ বিরতি চালু', stepPauseOff: 'ধাপ বিরতি বন্ধ',
+      noIpr: 'এই কেসে কোনো IPR নেই', stlOk: 'STL এক্সপোর্ট হয়েছে', pngOk: 'PNG সেভ হয়েছে', jsonOk: 'JSON এক্সপোর্ট হয়েছে',
+      attFull: 'অ্যাটাচমেন্ট: পূর্ণ', attSubtle: 'অ্যাটাচমেন্ট: হালকা', attOff: 'অ্যাটাচমেন্ট: লুকানো',
+      cmpInitial: 'প্রাথমিক · ধাপ 0', stepWord: 'ধাপ'
+    },
+    pt: {
+      views: {
+        front: 'Frente', upper: 'Sup.', lower: 'Inf.', left: 'Esq.', right: 'Dir.',
+        maxilla: 'Maxil.', mandible: 'Mandíb.', occlusion: 'Oclus.', multi: 'Multi'
+      },
+      tips: {
+        att: 'Attachments', ipr: 'IPR / Desgaste', contact: 'Contatos Oclusais (H)',
+        ghost: 'Fantasma Etapa 0', grid: 'Grade / Régua 1mm (G)', caliper: 'Régua 3D (M)',
+        clip: 'Plano de Corte (C)', compare: 'Comparar Split', panel: 'Análise Clínica',
+        export: 'Exportar', open: 'Abrir .iiwgl', theme: 'Tema Claro / Escuro'
+      },
+      setupSub: 'VC Connect', stepsLabel: 'Etapas', staticLabel: '3D Estático',
+      ctrlFirst: 'Primeira Etapa', ctrlPrev: 'Etapa Anterior', ctrlPlay: 'Reproduzir / Pausa',
+      ctrlNext: 'Próxima Etapa', ctrlLast: 'Etapa Final', ctrlLoop: 'Repetir',
+      dlMsg: 'Baixando caso 3D…', finMsg: 'Finalizando envio na nuvem…', decMsg: 'Decodificando malhas 3D…',
+      loadTitle: 'Carregar Plano 3D',
+      loadDesc: 'Solte um arquivo OnyxCeph <code>.iiwgl</code> aqui ou selecione um.',
+      dropZone: 'Clique ou arraste um arquivo <strong>.iiwgl</strong>',
+      encTitle: 'Caso Protegido',
+      encDesc: 'Digite a senha do caso para abrir esta simulação 3D.',
+      pwdPlaceholder: 'Senha do caso', unlockBtn: 'Desbloquear e Exibir',
+      clipTitle: 'Plano de Corte', clipOff: 'Off', clipAxial: 'Axial', clipSag: 'Sagital', clipCor: 'Coronal', clipFlip: 'Inverter',
+      expTitle: 'Exportar', expStl: 'Malha STL (Etapa atual)', expPng: 'Captura PNG', expJson: 'Relatório JSON Clínico',
+      drawerTitle: 'Análise Clínica', tabMov: 'Movimentos', tabBol: 'Bolton / IPR', tabAna: 'Anatomia',
+      rulerHint: 'Clique em 2 pontos', stepPauseOn: 'Pausa por etapa ON', stepPauseOff: 'Pausa por etapa OFF',
+      noIpr: 'Sem IPR neste caso', stlOk: 'STL exportado', pngOk: 'PNG salvo', jsonOk: 'JSON exportado',
+      attFull: 'Attachments: Completos', attSubtle: 'Attachments: Sutis', attOff: 'Attachments: Ocultos',
+      cmpInitial: 'Inicial · Etapa 0', stepWord: 'Etapa'
+    },
+    ru: {
+      views: {
+        front: 'Фронт', upper: 'Верх', lower: 'Низ', left: 'Слева', right: 'Справа',
+        maxilla: 'Верх.д', mandible: 'Нижн.д', occlusion: 'Оккл.', multi: 'Мульти'
+      },
+      tips: {
+        att: 'Аттачменты', ipr: 'Сепарация / IPR', contact: 'Окклюз. контакты (H)',
+        ghost: 'Контур этапа 0', grid: 'Сетка / шкала 1мм (G)', caliper: '3D линейка (M)',
+        clip: 'Сечение (C)', compare: 'Сравнение', panel: 'Клинический анализ',
+        export: 'Экспорт', open: 'Открыть .iiwgl', theme: 'Светлая / Тёмная тема'
+      },
+      setupSub: 'VC Connect', stepsLabel: 'Этапы', staticLabel: 'Статика 3D',
+      ctrlFirst: 'Первый этап', ctrlPrev: 'Предыдущий этап', ctrlPlay: 'Воспроизвести / Пауза',
+      ctrlNext: 'Следующий этап', ctrlLast: 'Финальный этап', ctrlLoop: 'Повтор',
+      dlMsg: 'Загрузка 3D-кейса…', finMsg: 'Завершение загрузки в облако…', decMsg: 'Декодирование 3D-моделей…',
+      loadTitle: 'Загрузить 3D-план лечения',
+      loadDesc: 'Перетащите файл OnyxCeph <code>.iiwgl</code> сюда или выберите его.',
+      dropZone: 'Нажмите или перетащите файл <strong>.iiwgl</strong>',
+      encTitle: 'Защищённый кейс',
+      encDesc: 'Введите пароль кейса, чтобы открыть 3D-сетап.',
+      pwdPlaceholder: 'Пароль кейса', unlockBtn: 'Открыть 3D',
+      clipTitle: 'Сечение', clipOff: 'Выкл', clipAxial: 'Аксиал.', clipSag: 'Сагитт.', clipCor: 'Корон.', clipFlip: 'Инверт.',
+      expTitle: 'Экспорт', expStl: 'STL-модель (текущий этап)', expPng: 'Снимок PNG', expJson: 'Клинический JSON-отчёт',
+      drawerTitle: 'Клинический анализ', tabMov: 'Перемещения', tabBol: 'Bolton / IPR', tabAna: 'Анатомия',
+      rulerHint: 'Выберите 2 точки', stepPauseOn: 'Пауза по шагам ВКЛ', stepPauseOff: 'Пауза по шагам ВЫКЛ',
+      noIpr: 'В кейсе нет сепарации IPR', stlOk: 'STL экспортирован', pngOk: 'PNG сохранён', jsonOk: 'JSON экспортирован',
+      attFull: 'Аттачменты: Полные', attSubtle: 'Аттачменты: Полупрозр.', attOff: 'Аттачменты: Скрыты',
+      cmpInitial: 'Начало · Этап 0', stepWord: 'Этап'
     }
   };
 
   const S = {
-    model: null, customSub: null, objects: [], modelGen: 0,
+    model: null, caseTitle: 'VC Connect', customSub: null, objects: [], modelGen: 0,
     frame: 0, stepFloat: 0, targetStep: null, stepIdx: 0,
     playing: false, loop: false, speed: 1, stepPause: false, pauseUntil: 0,
     view: 'front', archFilter: 'both', lang: 'en',
@@ -420,14 +635,6 @@
     }, 120);
   }
 
-  function updateSubtitle() {
-    const t = I18N[S.lang];
-    if (S.customSub) { $('case-sub').textContent = S.customSub; return; }
-    if (!S.model) { $('case-sub').textContent = t.setupSub; return; }
-    const total = Math.max(0, S.model.playback.length - 1);
-    $('case-sub').textContent = S.model.playback.length > 1 ? `${total} ${t.stepsLabel}` : t.staticLabel;
-  }
-
   function updateAttStyle() {
     const t = I18N[S.lang];
     const btn = $('tool-att');
@@ -588,8 +795,7 @@
     $('tool-ipr').setAttribute('aria-pressed', S.showIPR ? 'true' : 'false');
     buildDrawer();
     document.querySelector('.stage-dock').style.display = model.playback.length > 1 ? '' : 'none';
-    $('case-title').textContent = titleHint || (model.imageType || I18N[S.lang].setupSub);
-    updateSubtitle();
+    S.caseTitle = titleHint || (model.imageType || 'VC Connect');
 
     S.stepIdx = -1;
     updateAttStyle();
@@ -1497,7 +1703,7 @@
   function exportJSON() {
     if (!S.model) return;
     const payload = {
-      title: $('case-title').textContent,
+      title: S.caseTitle || 'VC Connect',
       steps: Math.max(0, S.model.playback.length - 1),
       currentStep: S.stepIdx,
       ipr: S.ipr,
@@ -1633,11 +1839,24 @@
     markDirty();
   }
 
-  function setLang(lang) {
-    S.lang = lang === 'fr' ? 'fr' : 'en';
+  function normalizeLang(raw) {
+    const code = String(raw || '').trim().toLowerCase().split(/[-_]/)[0];
+    return I18N[code] ? code : 'en';
+  }
+
+  function setLang(lang, persist) {
+    S.lang = normalizeLang(lang);
     document.documentElement.lang = S.lang;
-    $('lang-en').classList.toggle('active', S.lang === 'en');
-    $('lang-fr').classList.toggle('active', S.lang === 'fr');
+    if (persist) {
+      try { localStorage.setItem('vc_lang', S.lang); } catch (_) {}
+    }
+    const lc = $('lang-code');
+    if (lc) lc.textContent = S.lang.toUpperCase();
+    document.querySelectorAll('#lang-menu .lang-opt').forEach(btn => {
+      const act = btn.dataset.lang === S.lang;
+      btn.classList.toggle('active', act);
+      btn.setAttribute('aria-selected', act ? 'true' : 'false');
+    });
     const t = I18N[S.lang];
     document.querySelectorAll('[data-i18n-view]').forEach(el => {
       const k = el.dataset.i18nView;
@@ -1660,13 +1879,17 @@
     $('drawer-title').textContent = t.drawerTitle;
     $('dtab-mov').textContent = t.tabMov; $('dtab-bol').textContent = t.tabBol; $('dtab-ana').textContent = t.tabAna;
     $('cmp-left-lbl').textContent = t.cmpInitial;
+    if (S.model && S.model.playback.length) {
+      $('cmp-right-lbl').textContent = `${t.stepWord} ${Math.max(0, S.stepIdx)} / ${S.model.playback.length - 1}`;
+      buildDrawer();
+    }
+    if (S.caliperPts.length < 2) $('caliper-val').textContent = t.rulerHint;
     $('pwd-input').placeholder = t.pwdPlaceholder; $('pwd-submit').textContent = t.unlockBtn;
     if ($('pwd-input').style.display !== 'none') {
       $('modal-title').textContent = t.encTitle; $('modal-desc').textContent = t.encDesc;
     } else {
       $('modal-title').textContent = t.loadTitle; $('modal-desc').innerHTML = t.loadDesc; $('drop-zone').innerHTML = t.dropZone;
     }
-    updateSubtitle();
   }
 
   function wireStageScrub() {
@@ -1725,7 +1948,27 @@
   function closePopovers(except) {
     if (except !== 'clip') $('clip-popover').classList.add('hidden');
     if (except !== 'export') $('export-popover').classList.add('hidden');
+    if (except !== 'lang') {
+      const lm = $('lang-menu'), lb = $('lang-btn');
+      if (lm) lm.classList.add('hidden');
+      if (lb) lb.setAttribute('aria-expanded', 'false');
+    }
     $('tool-clip').classList.toggle('active', S.clipAxis !== 'none' || !$('clip-popover').classList.contains('hidden'));
+  }
+
+  function buildLangMenu() {
+    const menu = $('lang-menu');
+    if (!menu) return;
+    menu.innerHTML = LANGS.map(l =>
+      `<button type="button" class="lang-opt" role="option" data-lang="${l.code}"><span>${l.name}</span><span class="lang-opt-code">${l.label}</span></button>`
+    ).join('');
+    menu.querySelectorAll('.lang-opt').forEach(btn => {
+      btn.onclick = ev => {
+        ev.stopPropagation();
+        setLang(btn.dataset.lang, true);
+        closePopovers();
+      };
+    });
   }
 
   function wireUI() {
@@ -1800,8 +2043,19 @@
     $('exp-json').onclick = () => { closePopovers(); exportJSON(); };
     $('tool-open').onclick = () => $('file-input').click();
 
-    $('lang-en').onclick = () => setLang('en');
-    $('lang-fr').onclick = () => setLang('fr');
+    buildLangMenu();
+    $('lang-btn').onclick = ev => {
+      ev.stopPropagation();
+      const hidden = $('lang-menu').classList.toggle('hidden');
+      closePopovers(hidden ? null : 'lang');
+      $('lang-btn').setAttribute('aria-expanded', hidden ? 'false' : 'true');
+    };
+    document.addEventListener('click', ev => {
+      if (!ev.target.closest('.lang-wrap')) {
+        $('lang-menu')?.classList.add('hidden');
+        $('lang-btn')?.setAttribute('aria-expanded', 'false');
+      }
+    });
 
     document.querySelectorAll('.view-tile').forEach(b => b.onclick = () => setCameraView(b.dataset.view));
     $('ctrl-first').onclick = () => jumpToStage(0);
@@ -1858,6 +2112,7 @@
         }
         else if (msg.type === 'HIDE_JAW') setArchVisibility(msg.jaw === 'upper' ? 'lower' : msg.jaw === 'lower' ? 'upper' : 'both');
         else if (msg.type === 'RULER_STYLE') toggleOrthoGrid(msg.value === 'ruler');
+        else if (msg.type === 'LANG' && msg.value) setLang(msg.value);
       } catch (_) {}
     });
 
@@ -1901,7 +2156,9 @@
     if (qs.get('debugFps') === '1') { debugFps = true; $('fps-hud').classList.remove('hidden'); }
     if (qs.get('compareView') === '1') toggleCompare(true);
     S.customSub = qs.get('sub') || null;
-    setLang(qs.get('lang') === 'fr' ? 'fr' : 'en');
+    let savedLang = null;
+    try { savedLang = localStorage.getItem('vc_lang'); } catch (_) {}
+    setLang(qs.get('lang') || savedLang || 'en');
     setTheme(qs.get('theme') === 'light' ? 'light' : 'dark');
     const mlink = qs.get('mlink');
     const pwd = qs.get('p') || qs.get('pw') || null;
