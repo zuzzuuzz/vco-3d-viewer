@@ -9,6 +9,131 @@ for (const bad of ['/cases/', '/cases/a/../b', '/cases/a/..%2Fb', '/cases/a%5Cb'
 
 assert.throws(() => IIWGL.parseIIWGL(new ArrayBuffer(0), null), { message: 'Invalid or empty .iiwgl file' });
 
+const tGradUpper = IIWGL.computeToothGradient(new Float32Array([0, 0, 0, 0, 10, 0]), 0);
+assert.deepEqual([...tGradUpper], [0, 1]);
+const tGradLower = IIWGL.computeToothGradient(new Float32Array([0, 0, 0, 0, -10, 0]), 1);
+assert.deepEqual([...tGradLower], [0, 1]);
+const gGrad = IIWGL.computeGumMarginGradient(new Float32Array([0, 0, 0, 10, 10, 10]), new Float32Array([0, 0, 0]), 2.8);
+assert.ok(gGrad[0] > 0.99 && gGrad[1] === 0);
+
+// Synthetic clinical tests: smoothNormalsArray, extractIPR, computeToothMovements, computeBoltonAndArch
+const smN = IIWGL.smoothNormalsArray(
+  new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]),
+  new Uint32Array([0, 1, 2, 3, 4, 5]),
+  1
+);
+assert.equal(smN.length, 18);
+assert.ok(Math.abs(Math.hypot(smN[0], smN[1], smN[2]) - 1) < 1e-4);
+
+const idM = () => [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+const trM = (x, y, z) => [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, x, y, z, 1];
+const mkVerts = (x0, x1) => {
+  const arr = [];
+  for (let i = 0; i < 20; i++) arr.push(i < 10 ? x0 : x1, i * 0.1, 0);
+  return new Float32Array(arr);
+};
+const synthModel = {
+  playback: [
+    { frame: 0, pause: 2000, name: 'S0', moves: 0 },
+    { frame: 100, pause: 2000, name: 'S1', moves: 0 },
+    { frame: 200, pause: 2000, name: 'S2', moves: 1 }
+  ],
+  objects: [
+    {
+      name: 'Tooth 11', type: 11, group: 0, transform: new Float32Array(idM()), isVisible: true,
+      bbox: { min: [-8, 0, -2], max: [0, 8, 2] },
+      keys: {
+        TRANS: [{ frame: 0, data: trM(-4, 0, 20) }, { frame: 100, data: trM(-4, 0, 20) }, { frame: 200, data: trM(-6.5, 0, 20) }],
+        VISIB: [], ALPHA: [], COLOR: [], VTCLR: [],
+        VTPOS: [{ frame: 0, data: ['A0'] }, { frame: 50, data: ['A1'] }]
+      },
+      mesh: {
+        vertices: mkVerts(-4, 4), indices: new Uint32Array([0, 1, 2]),
+        morphPositions: { A0: mkVerts(-4, 4), A1: mkVerts(-4, 3.85) }
+      }
+    },
+    {
+      name: 'Tooth 21', type: 21, group: 0, transform: new Float32Array(idM()), isVisible: true,
+      bbox: { min: [0, 0, -2], max: [8, 8, 2] },
+      keys: {
+        TRANS: [{ frame: 0, data: trM(4, 0, 20) }, { frame: 100, data: trM(4, 0, 20) }, { frame: 200, data: trM(8.5, 0, 20) }],
+        VISIB: [], ALPHA: [], COLOR: [], VTCLR: [],
+        VTPOS: [{ frame: 0, data: ['B0'] }, { frame: 50, data: ['B1'] }]
+      },
+      mesh: {
+        vertices: mkVerts(-4, 4), indices: new Uint32Array([0, 1, 2]),
+        morphPositions: { B0: mkVerts(-4, 4), B1: mkVerts(-3.85, 4) }
+      }
+    },
+    {
+      name: 'Tooth 13', type: 13, group: 0, transform: new Float32Array(idM()), isVisible: true,
+      bbox: { min: [-3, 0, -2], max: [3, 8, 2] },
+      keys: { TRANS: [{ frame: 0, data: trM(-15, 0, 14) }, { frame: 200, data: trM(-15, 0, 14) }], VISIB: [], ALPHA: [], COLOR: [], VTPOS: [], VTCLR: [] },
+      mesh: { vertices: mkVerts(-3, 3), indices: new Uint32Array([0, 1, 2]), morphPositions: {} }
+    },
+    {
+      name: 'Tooth 23', type: 23, group: 0, transform: new Float32Array(idM()), isVisible: true,
+      bbox: { min: [-3, 0, -2], max: [3, 8, 2] },
+      keys: { TRANS: [{ frame: 0, data: trM(15, 0, 14) }, { frame: 200, data: trM(15, 0, 14) }], VISIB: [], ALPHA: [], COLOR: [], VTPOS: [], VTCLR: [] },
+      mesh: { vertices: mkVerts(-3, 3), indices: new Uint32Array([0, 1, 2]), morphPositions: {} }
+    }
+  ]
+};
+
+const iprRes = IIWGL.extractIPR(synthModel);
+assert.equal(iprRes.length, 1);
+assert.equal(iprRes[0].id, '11-21');
+assert.equal(iprRes[0].stageIdx, 1);
+assert.ok(Math.abs(iprRes[0].mm - 0.3) < 0.06, `expected ~0.3, got ${iprRes[0].mm}`);
+
+const movRes = IIWGL.computeToothMovements(synthModel);
+assert.equal(movRes.teeth.find(t => t.fdi === 11).plausibility, 'high');
+assert.equal(movRes.teeth.find(t => t.fdi === 21).plausibility, 'implausible');
+assert.equal(movRes.teeth.find(t => t.fdi === 13).plausibility, 'normal');
+assert.equal(movRes.stageMeta[0].upperActive, false);
+assert.equal(movRes.stageMeta[0].lowerActive, false);
+assert.equal(movRes.stageMeta[1].upperActive, false);
+assert.equal(movRes.stageMeta[2].upperActive, true);
+assert.equal(movRes.stageMeta[2].overLimit, true);
+
+const bolRes = IIWGL.computeBoltonAndArch(synthModel, 0);
+assert.equal(bolRes.anterior6.complete, false);
+assert.ok(Math.abs(bolRes.archWidths.upperCanine.initialMm - 30) < 1e-3);
+
+// Parser composeBase & duplicate-frame interpolation guards
+assert.equal(
+  IIWGL.shouldComposeBase(
+    new Float32Array(trM(-3.18, -1.41, 5.81)),
+    [{ frame: 0, data: trM(-3.43, -1.49, 6.37) }, { frame: 80, data: trM(-3.18, -1.41, 5.81) }, { frame: 999, data: trM(0, 0, 0) }],
+    { min: [-1, -1, -1], max: [1, 1, 1] }
+  ),
+  false
+);
+assert.equal(
+  IIWGL.shouldComposeBase(
+    new Float32Array(trM(1, 2, 3)),
+    [{ frame: 0, data: trM(0, 0, 0) }, { frame: 999, data: trM(0, 0, 0) }],
+    { min: [14, 1, 10], max: [16, 3, 12] }
+  ),
+  false
+);
+assert.equal(
+  IIWGL.shouldComposeBase(
+    new Float32Array(trM(14.0, 2.0, 12.0)),
+    [{ frame: 0, data: trM(0, 0, 0) }, { frame: 999, data: trM(1, 0, 0) }],
+    { min: [-1.2, -1.2, -0.8], max: [1.2, 1.2, 0.8] }
+  ),
+  true
+);
+const dupOut = new Float32Array(16);
+IIWGL.evalTransform(
+  [{ frame: 100, intp: 'linear', data: trM(1, 2, 3) }, { frame: 100, intp: 'linear', data: trM(4, 5, 6) }],
+  100,
+  { min: [-1, -1, -1], max: [1, 1, 1] },
+  dupOut
+);
+assert.ok(Array.from(dupOut).every(Number.isFinite));
+
 const payload = new Uint8Array([1, 2, 3, 4]);
 const cacheStore = new Map();
 globalThis.caches = {
