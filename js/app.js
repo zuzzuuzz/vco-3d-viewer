@@ -6,6 +6,7 @@
   const ORTHO_HALF_TAN = Math.tan((ORTHO_FOV * 0.5) * Math.PI / 180);
   const $ = id => document.getElementById(id);
   const railWidth = () => (window.innerWidth <= 768 ? 50 : 64);
+  const isMobile = () => window.innerWidth <= 900 || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
 
   const LANGS = [
     { code: 'en', label: 'EN', name: 'English' },
@@ -293,7 +294,7 @@
     clipAxis: 'none', clipVal: 0, clipInvert: false,
     hiddenTeeth: new Set(), isolatedFdi: null,
     anatVis: { uGum: true, lGum: true, uTeeth: true, lTeeth: true, bones: true },
-    ipr: [], movements: null, bolton: null, contactCache: new Map(),
+    ipr: [], toothByFdi: new Map(), movements: null, bolton: null, contactCache: new Map(),
     center: new THREE.Vector3(), upperCenter: new THREE.Vector3(), lowerCenter: new THREE.Vector3(),
     bboxMin: new THREE.Vector3(-30, -20, -25), bboxMax: new THREE.Vector3(30, 20, 25), radius: 40,
     pendingBuf: null, lastTick: 0, lastNormalTime: 0, dirtyUntil: 0, rafId: 0, orbiting: false,
@@ -309,53 +310,56 @@
   let renderer, scene, cam, controls, rootGroup, ghostGroup, caliperGroup, envRT;
   let clipPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 0);
   let meshWorker = null, multiDrag = null, downPt = null, contactTimer = 0, toastTimer = 0, debugFps = false, inAnimate = false;
-  let lastRulerSig = '';
+  let lastRulerSig = '', lastIprSig = '', vpW = 1, vpH = 1, cachedDockTop = 0, cachedMultiRects = null, resizeRaf = 0;
   const raycaster = new THREE.Raycaster();
   const tmpMat = new Float32Array(16);
+  const _vA = new THREE.Vector3(), _vB = new THREE.Vector3(), _vC = new THREE.Vector3();
+  const smoothQueue = [];
+  let smoothInFlight = false;
 
   const gov = {
-    hist: [], idx: 0, dpr: 1, maxDpr: 1, dprLocked: false, preDropAvg: 0, dropAtCount: -1,
-    fastStreak: 0, rendered: 0, skipped: 0, fpsCount: 0, lastFpsAt: 0,
-    updateMaxDpr(W, H) {
-      this.maxDpr = Math.min(window.devicePixelRatio || 1, 2, 1920 / Math.max(W, H, 1));
-      if (this.dpr > this.maxDpr || !this.dpr) this.dpr = this.maxDpr;
+    dpr: 0, maxDpr: 1, rendered: 0, fpsCount: 0, lastFpsAt: 0, settleTimer: 0,
+    targetSettledDpr() {
+      return (isMobile() && S.view === 'multi') ? Math.min(this.maxDpr, 1.5) : this.maxDpr;
+    },
+    targetMotionDpr() {
+      if (!isMobile()) return this.maxDpr;
+      if (S.view === 'multi') return Math.min(this.maxDpr, 1);
+      return Math.min(this.maxDpr, Math.max(1.1, +(this.maxDpr * 0.65).toFixed(2)));
+    },
+    applyDpr(next) {
+      if (!renderer || !next || Math.abs(next - this.dpr) < 0.01) return;
+      this.dpr = next;
       renderer.setPixelRatio(this.dpr);
     },
-    record(dtMs, inMotion) {
-      this.rendered++;
-      this.fpsCount++;
+    updateMaxDpr(W, H) {
+      clearTimeout(this.settleTimer);
+      this.maxDpr = Math.min(window.devicePixelRatio || 1, 2, 2400 / Math.max(W, H, 1));
+      this.applyDpr(this.targetSettledDpr());
+    },
+    syncDpr(inMotion) {
+      if (!isMobile()) return;
       if (inMotion) {
-        if (this.hist.length < 180) this.hist.push(dtMs);
-        else { this.hist[this.idx] = dtMs; this.idx = (this.idx + 1) % 180; }
-        if (dtMs < 14) this.fastStreak++; else this.fastStreak = 0;
-        if (this.hist.length >= 30 && !this.dprLocked && (this.rendered % 30 === 0)) {
-          let slow = 0, sum = 0, len = Math.min(30, this.hist.length);
-          for (let i = 0; i < len; i++) {
-            const v = this.hist[(this.idx - 1 - i + this.hist.length) % this.hist.length];
-            sum += v;
-            if (v > 22) slow++;
-          }
-          const avg = sum / len;
-          if (this.dropAtCount > 0 && this.rendered - this.dropAtCount >= 30) {
-            if ((this.preDropAvg - avg) / Math.max(1, this.preDropAvg) < 0.08) {
-              this.dprLocked = true;
-              this.dpr = this.maxDpr;
-              renderer.setPixelRatio(this.dpr);
-            }
-            this.dropAtCount = -1;
-          } else if (slow >= 20 && this.dpr > 0.75) {
-            this.preDropAvg = avg;
-            this.dropAtCount = this.rendered;
-            this.dpr = Math.max(0.75, +(this.dpr - 0.25).toFixed(2));
-            renderer.setPixelRatio(this.dpr);
-          }
-        }
-        if (this.fastStreak >= 150 && this.dpr < this.maxDpr && !this.dprLocked) {
-          this.dpr = this.maxDpr;
-          this.fastStreak = 0;
-          renderer.setPixelRatio(this.dpr);
+        clearTimeout(this.settleTimer);
+        this.applyDpr(this.targetMotionDpr());
+      } else {
+        const sharp = this.targetSettledDpr();
+        if (this.dpr < sharp - 0.01) {
+          clearTimeout(this.settleTimer);
+          this.settleTimer = setTimeout(() => {
+            this.applyDpr(this.targetSettledDpr());
+            markDirty(80);
+          }, 160);
         }
       }
+    },
+    setSharp() {
+      clearTimeout(this.settleTimer);
+      this.applyDpr(this.targetSettledDpr());
+    },
+    record(dtMs) {
+      this.rendered++;
+      this.fpsCount++;
       if (debugFps) {
         const now = performance.now();
         if (now - this.lastFpsAt >= 350) {
@@ -414,24 +418,27 @@
         const msg = ev.data;
         if (!msg || msg.gen !== S.modelGen) return;
         if (msg.type === 'smoothNormals') {
+          smoothInFlight = false;
           const e = S.objects[msg.id];
-          if (!e) return;
-          if (msg.morphKey) {
-            if (!e.o.mesh.morphNormals) e.o.mesh.morphNormals = {};
-            e.o.mesh.morphNormals[msg.morphKey] = msg.normals;
-            if (e.normAttr0 && msg.morphKey === e.o.keys.VTPOS[0]?.data[0]) {
-              e.normAttr0.array.set(msg.normals);
-              e.normAttr0.needsUpdate = true;
-            }
-          } else {
-            const nAttr = e.geo.attributes.normal;
-            if (nAttr && nAttr.array.length === msg.normals.length) {
-              nAttr.array.set(msg.normals);
-              nAttr.needsUpdate = true;
-              if (e.normAttr0) { e.normAttr0.array.set(msg.normals); e.normAttr0.needsUpdate = true; }
-              markDirty(120);
+          if (e) {
+            if (msg.morphKey) {
+              if (!e.o.mesh.morphNormals) e.o.mesh.morphNormals = {};
+              e.o.mesh.morphNormals[msg.morphKey] = msg.normals;
+              if (e.normAttr0 && msg.morphKey === e.o.keys.VTPOS[0]?.data[0]) {
+                e.normAttr0.array.set(msg.normals);
+                e.normAttr0.needsUpdate = true;
+              }
+            } else {
+              const nAttr = e.geo.attributes.normal;
+              if (nAttr && nAttr.array.length === msg.normals.length) {
+                nAttr.array.set(msg.normals);
+                nAttr.needsUpdate = true;
+                if (e.normAttr0) { e.normAttr0.array.set(msg.normals); e.normAttr0.needsUpdate = true; }
+                markDirty(120);
+              }
             }
           }
+          pumpSmoothQueue();
         } else if (msg.type === 'occlusalContacts') {
           const map = new Map();
           for (const r of msg.results) map.set(r.id, r.colors);
@@ -450,8 +457,9 @@
       try { renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true }); }
       catch (_) { renderer = null; return false; }
     }
-    gov.updateMaxDpr(vp.clientWidth, vp.clientHeight);
-    renderer.setSize(vp.clientWidth, vp.clientHeight);
+    refreshLayoutCache();
+    gov.updateMaxDpr(vpW, vpH);
+    renderer.setSize(vpW, vpH);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 0.92;
     renderer.outputEncoding = THREE.sRGBEncoding;
@@ -475,7 +483,7 @@
     const fill = new THREE.DirectionalLight(0xdbeafe, 0.28); fill.position.set(-55, 8, 35); scene.add(fill);
     const rim = new THREE.DirectionalLight(0xffe8c2, 0.32); rim.position.set(0, -36, -45); scene.add(rim);
 
-    const asp = vp.clientWidth / Math.max(1, vp.clientHeight);
+    const asp = vpW / Math.max(1, vpH);
     cam = new THREE.PerspectiveCamera(ORTHO_FOV, asp, 40, 8000);
     cam.position.set(0, 0, 1200);
 
@@ -496,7 +504,7 @@
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', () => {
         document.documentElement.style.setProperty('--vvh', `${window.visualViewport.height}px`);
-        onResize();
+        if (!resizeRaf) resizeRaf = requestAnimationFrame(() => { resizeRaf = 0; onResize(); });
       });
     }
 
@@ -511,14 +519,25 @@
     return true;
   }
 
+  function refreshLayoutCache() {
+    const vp = $('viewport');
+    if (!vp) return;
+    vpW = vp.clientWidth || 1;
+    vpH = vp.clientHeight || 1;
+    const dockEl = document.querySelector('.stage-dock');
+    cachedDockTop = (dockEl && dockEl.style.display !== 'none') ? dockEl.getBoundingClientRect().top : vpH - 16;
+    cachedMultiRects = null;
+  }
+
   function onResize() {
     if (!renderer) return;
-    const vp = $('viewport'), W = vp.clientWidth, H = vp.clientHeight;
-    gov.updateMaxDpr(W, H);
-    renderer.setSize(W, H);
-    cam.aspect = W / Math.max(1, H);
+    refreshLayoutCache();
+    gov.updateMaxDpr(vpW, vpH);
+    renderer.setSize(vpW, vpH);
+    cam.aspect = vpW / Math.max(1, vpH);
     cam.updateProjectionMatrix();
     lastRulerSig = '';
+    lastIprSig = '';
     markDirty();
   }
 
@@ -605,34 +624,59 @@
     clearGroup(ghostGroup, false);
     if (ghostGroup.userData.mat) { ghostGroup.userData.mat.dispose(); ghostGroup.userData.mat = null; }
     clearCaliper();
+    smoothQueue.length = 0;
+    smoothInFlight = false;
     S.objects = [];
+    S.toothByFdi.clear();
     S.contactCache.clear();
+    lastIprSig = '';
+  }
+
+  function pumpSmoothQueue() {
+    if (!meshWorker || smoothInFlight || !smoothQueue.length) return;
+    const job = smoothQueue.shift();
+    if (!job || job.gen !== S.modelGen) { pumpSmoothQueue(); return; }
+    const e = S.objects[job.id];
+    if (!e || !e.o.mesh) { pumpSmoothQueue(); return; }
+    const srcPos = job.morphKey ? (e.o.mesh.morphPositions && e.o.mesh.morphPositions[job.morphKey]) : e.geo.attributes.position.array;
+    if (!srcPos) { pumpSmoothQueue(); return; }
+    smoothInFlight = true;
+    const posCopy = new Float32Array(srcPos);
+    const idxCopy = new Uint32Array(e.o.mesh.indices);
+    meshWorker.postMessage({ type: 'smoothNormals', gen: job.gen, id: job.id, morphKey: job.morphKey || null, positions: posCopy, indices: idxCopy, passes: job.passes }, [posCopy.buffer, idxCopy.buffer]);
+  }
+
+  function requestMorphNormal(e, idx, mk) {
+    if (!meshWorker || !mk || !e.isGingiva) return;
+    if (e.o.mesh.morphNormals && e.o.mesh.morphNormals[mk]) return;
+    if (!e.morphNormQueued) e.morphNormQueued = new Set();
+    if (e.morphNormQueued.has(mk)) return;
+    e.morphNormQueued.add(mk);
+    smoothQueue.push({ gen: S.modelGen, id: idx, morphKey: mk, passes: isMobile() ? 2 : 5 });
+    pumpSmoothQueue();
   }
 
   function queueWorkerSmoothing(gen) {
     if (!meshWorker) return;
+    smoothQueue.length = 0;
+    smoothInFlight = false;
+    const gingPasses = isMobile() ? 2 : 5;
     S.objects.forEach((e, idx) => {
       if (!e.o.mesh || (!e.isTooth && !e.isGingiva)) return;
-      const passes = e.isGingiva ? 5 : 1;
-      const posCopy = new Float32Array(e.geo.attributes.position.array);
-      const idxCopy = new Uint32Array(e.o.mesh.indices);
-      meshWorker.postMessage({ type: 'smoothNormals', gen, id: idx, positions: posCopy, indices: idxCopy, passes }, [posCopy.buffer, idxCopy.buffer]);
+      smoothQueue.push({ gen, id: idx, passes: e.isGingiva ? gingPasses : 1 });
     });
-    setTimeout(() => {
-      if (S.modelGen !== gen || !meshWorker) return;
-      S.objects.forEach((e, idx) => {
-        if (!e.isGingiva || !e.o.mesh || !e.o.mesh.morphPositions) return;
-        const keys = Object.keys(e.o.mesh.morphPositions);
-        // shortcut: cap pre-baked morph normals at 30 keyframes, upgrade to LRU cache if cases exceed 30 steps
-        for (let i = 0; i < Math.min(30, keys.length); i++) {
-          const mk = keys[i], mp = e.o.mesh.morphPositions[mk];
-          if (!mp) continue;
-          const posCopy = new Float32Array(mp);
-          const idxCopy = new Uint32Array(e.o.mesh.indices);
-          meshWorker.postMessage({ type: 'smoothNormals', gen, id: idx, morphKey: mk, positions: posCopy, indices: idxCopy, passes: 5 }, [posCopy.buffer, idxCopy.buffer]);
-        }
-      });
-    }, 120);
+    S.objects.forEach((e, idx) => {
+      if (!e.isGingiva || !e.o.mesh || !e.o.mesh.morphPositions) return;
+      const keys = Object.keys(e.o.mesh.morphPositions);
+      if (!keys.length) return;
+      if (isMobile()) {
+        requestMorphNormal(e, idx, keys[0]);
+        if (keys.length > 1) requestMorphNormal(e, idx, keys[keys.length - 1]);
+      } else {
+        for (let i = 0; i < Math.min(30, keys.length); i++) requestMorphNormal(e, idx, keys[i]);
+      }
+    });
+    pumpSmoothQueue();
   }
 
   function updateAttStyle() {
@@ -767,6 +811,7 @@
         lastMorphPos: '', lastMorphClr: '', origOpacity: mat.opacity
       };
       S.objects.push(entry);
+      if (isTooth) S.toothByFdi.set(o.type, entry);
 
       if (!isMalocc) {
         const b = geo.boundingBox.clone().applyMatrix4(mesh.matrix);
@@ -795,6 +840,7 @@
     $('tool-ipr').setAttribute('aria-pressed', S.showIPR ? 'true' : 'false');
     buildDrawer();
     document.querySelector('.stage-dock').style.display = model.playback.length > 1 ? '' : 'none';
+    refreshLayoutCache();
     S.caseTitle = titleHint || (model.imageType || 'VC Connect');
 
     S.stepIdx = -1;
@@ -840,11 +886,11 @@
     if (!S.model) return;
     S.frame = frame;
     const now = performance.now();
-    const doNorm = forceNormals || (now - S.lastNormalTime > 70);
+    const doNorm = forceNormals || (now - S.lastNormalTime > (isMobile() ? 140 : 70));
     if (doNorm) S.lastNormalTime = now;
 
-    for (const e of S.objects) {
-      const o = e.o;
+    for (let ei = 0; ei < S.objects.length; ei++) {
+      const e = S.objects[ei], o = e.o;
       if (e.isMalocc) { e.mesh.visible = false; continue; }
 
       if (o.keys.TRANS.length) {
@@ -878,8 +924,10 @@
               const nAttr = e.geo.attributes.normal;
               applyMorphPair(nAttr.array, mn[mp.a], mn[mp.b], mp.t);
               nAttr.needsUpdate = true;
-            } else if (doNorm) {
-              e.geo.computeVertexNormals();
+            } else {
+              requestMorphNormal(e, ei, mp.a);
+              if (mp.b && mp.b !== mp.a) requestMorphNormal(e, ei, mp.b);
+              if (doNorm) e.geo.computeVertexNormals();
             }
           }
         }
@@ -910,6 +958,7 @@
       }
     }
 
+    lastIprSig = '';
     syncStageUI(frame, forceNormals);
     if (S.showContact) {
       clearTimeout(contactTimer);
@@ -1020,6 +1069,7 @@
   }
 
   function getMultiRects(W, H) {
+    if (cachedMultiRects && cachedMultiRects.W === W && cachedMultiRects.H === H) return cachedMultiRects.cells;
     const x0 = railWidth() + 14, x1 = W - 14;
     const dockEl = document.querySelector('.stage-dock');
     const bannerEl = document.querySelector('.top-banner');
@@ -1040,13 +1090,15 @@
     const sz = Math.floor(Math.min(availW / 3.05, availH / 2.76));
     const stepX = Math.min(Math.round(availW * 0.295), Math.round(sz * 1.56));
     const stepY = Math.round(availH * 0.5 - sz * 0.45);
-    return [
+    const cells = [
       { key: 'top',    view: 'maxilla',  arch: 'upper', cx,           cy: cyMid - stepY, size: sz },
       { key: 'left',   view: 'right',    arch: 'both',  cx: cx - stepX, cy: cyMid,       size: sz },
       { key: 'center', view: 'front',    arch: 'both',  cx,           cy: cyMid,         size: sz },
       { key: 'right',  view: 'left',     arch: 'both',  cx: cx + stepX, cy: cyMid,       size: sz },
       { key: 'bottom', view: 'mandible', arch: 'lower', cx,           cy: cyMid + stepY, size: sz }
     ];
+    cachedMultiRects = { W, H, cells };
+    return cells;
   }
 
   function setCameraView(view) {
@@ -1055,7 +1107,10 @@
     const isMulti = view === 'multi';
     if (isMulti && S.compareMode) toggleCompare(false);
     if (controls) controls.enabled = !isMulti;
+    lastIprSig = '';
+    gov.setSharp();
     if (isMulti) {
+      cachedMultiRects = null;
       S.archFilter = 'both';
       applyFrame(S.frame, false);
       markDirty();
@@ -1071,6 +1126,7 @@
     controls.update();
     controls.enableDamping = true;
     lastRulerSig = '';
+    lastIprSig = '';
     markDirty();
   }
 
@@ -1081,11 +1137,11 @@
       if (svg.childElementCount) { svg.innerHTML = ''; lastRulerSig = ''; }
       return;
     }
-    const vp = $('viewport'), W = vp.clientWidth, H = vp.clientHeight;
-    const right = new THREE.Vector3(1, 0, 0).applyQuaternion(cam.quaternion);
-    const pA = controls.target.clone().project(cam);
-    const pB = controls.target.clone().addScaledVector(right, 10).project(cam);
-    const pxPerMm = (Math.abs(pB.x - pA.x) * W * 0.5) / 10;
+    const W = vpW, H = vpH;
+    _vA.set(1, 0, 0).applyQuaternion(cam.quaternion);
+    _vB.copy(controls.target).project(cam);
+    _vC.copy(controls.target).addScaledVector(_vA, 10).project(cam);
+    const pxPerMm = (Math.abs(_vC.x - _vB.x) * W * 0.5) / 10;
     if (!Number.isFinite(pxPerMm) || pxPerMm < 0.25) return;
 
     const sig = `${W}|${H}|${pxPerMm.toFixed(3)}`;
@@ -1213,41 +1269,42 @@
     markDirty(200);
   }
 
-  function updateIPROverlay() {
+  function updateIPROverlay(force) {
     const svg = $('ipr-tool-overlay');
     if (!svg) return;
     if (!S.showIPR || !S.ipr.length || S.view === 'multi' || S.compareMode || document.body.dataset.vcPresentation === '1') {
       if (svg.childElementCount) svg.innerHTML = '';
+      lastIprSig = '';
       return;
     }
+    const W = vpW, H = vpH, dockTop = cachedDockTop || (H - 16);
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    const iprSig = `${S.stepIdx}|${S.view}|${S.archFilter}|${isLight}|${W}|${H}|${cam.position.x.toFixed(1)},${cam.position.y.toFixed(1)},${cam.position.z.toFixed(1)}|${controls.target.x.toFixed(1)},${controls.target.y.toFixed(1)},${controls.target.z.toFixed(1)}|${S.frame.toFixed(2)}`;
+    if (!force && iprSig === lastIprSig) return;
+    lastIprSig = iprSig;
+
     const activeItems = S.ipr.filter(item => item.stageIdx === S.stepIdx);
     if (!activeItems.length) {
       if (svg.childElementCount) svg.innerHTML = '';
       return;
     }
-    const vp = $('viewport'), W = vp.clientWidth, H = vp.clientHeight;
-    const dockEl = document.querySelector('.stage-dock');
-    const dockTop = (dockEl && dockEl.style.display !== 'none') ? dockEl.getBoundingClientRect().top : H - 16;
-    const byFdi = new Map();
-    for (const e of S.objects) if (e.isTooth) byFdi.set(e.o.type, e);
 
     const proj2D = vec => {
-      const p = vec.clone().project(cam);
-      return { x: (p.x * 0.5 + 0.5) * W, y: (-p.y * 0.5 + 0.5) * H, z: p.z };
+      _vB.copy(vec).project(cam);
+      return { x: (_vB.x * 0.5 + 0.5) * W, y: (-_vB.y * 0.5 + 0.5) * H, z: _vB.z };
     };
     const acUpper = proj2D(S.upperCenter);
     const acLower = proj2D(S.lowerCenter);
     const isOccl = S.view === 'maxilla' || S.view === 'mandible' || S.view === 'occlusion';
 
     const pills = [];
-    const v = new THREE.Vector3();
     for (const item of activeItems) {
       if (S.archFilter === 'upper' && item.group === 1) continue;
       if (S.archFilter === 'lower' && item.group === 0) continue;
-      const ent = byFdi.get(item.fdiA);
+      const ent = S.toothByFdi.get(item.fdiA);
       if (!ent || !ent.mesh.visible) continue;
-      v.set(item.localAnchorA[0], item.localAnchorA[1], item.localAnchorA[2]).applyMatrix4(ent.mesh.matrix);
-      const p = proj2D(v);
+      _vA.set(item.localAnchorA[0], item.localAnchorA[1], item.localAnchorA[2]).applyMatrix4(ent.mesh.matrix);
+      const p = proj2D(_vA);
       if (p.z < -1 || p.z > 1) continue;
       if (p.x < railWidth() + 8 || p.x > W - 12 || p.y < 50 || p.y > dockTop - 8) continue;
 
@@ -1284,7 +1341,6 @@
       }
     }
 
-    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
     const col = isLight ? '#1e252b' : '#ffffff';
     let defs = '<defs>', body = '';
     pills.forEach((p, idx) => {
@@ -1305,8 +1361,7 @@
 
   function hitMultiCell(clientX, clientY) {
     if (clientX < railWidth()) return null;
-    const vp = $('viewport'), W = vp.clientWidth, H = vp.clientHeight;
-    const cells = getMultiRects(W, H);
+    const cells = getMultiRects(vpW, vpH);
     if (!cells.length) return null;
     let best = cells[0], bestD2 = Infinity;
     for (const r of cells) {
@@ -1531,14 +1586,14 @@
       }
 
       const inMotion = S.playing || S.targetStep !== null || !!multiDrag || S.orbiting;
+      gov.syncDpr(inMotion);
       const active = inMotion || now <= S.dirtyUntil;
       if (!active) return;
 
-      const vp = $('viewport'), W = vp.clientWidth, H = vp.clientHeight;
       const t0 = performance.now();
-      renderFrameNow(W, H);
-      gov.record(performance.now() - t0, inMotion);
-      updateIPROverlay();
+      renderFrameNow(vpW, vpH);
+      gov.record(performance.now() - t0);
+      updateIPROverlay(false);
       updateRulerOverlay(false);
 
       S.rafId = requestAnimationFrame(animate);
@@ -1652,7 +1707,8 @@
     S.showIPR = next;
     $('tool-ipr').classList.toggle('active', next);
     $('tool-ipr').setAttribute('aria-pressed', next ? 'true' : 'false');
-    updateIPROverlay();
+    lastIprSig = '';
+    updateIPROverlay(true);
     markDirty(120);
   }
 
@@ -1687,8 +1743,8 @@
 
   function exportPNG() {
     if (!renderer) return;
-    const vp = $('viewport'), W = vp.clientWidth, H = vp.clientHeight;
-    renderFrameNow(W, H);
+    gov.setSharp();
+    renderFrameNow(vpW, vpH);
     const out = document.createElement('canvas');
     out.width = renderer.domElement.width; out.height = renderer.domElement.height;
     const ctx = out.getContext('2d');
@@ -1836,6 +1892,7 @@
     $('ico-sun').style.display = light ? 'none' : 'block';
     $('ico-moon').style.display = light ? 'block' : 'none';
     lastRulerSig = '';
+    lastIprSig = '';
     markDirty();
   }
 

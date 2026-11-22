@@ -66,7 +66,7 @@ html, body {
 .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; }
 .hidden { display: none !important; }
 
-#viewport { position: fixed; inset: 0; z-index: 1; transition: transform 300ms var(--ease); }
+#viewport { position: fixed; inset: 0; z-index: 1; touch-action: none; transition: transform 300ms var(--ease); }
 #viewport canvas { display: block; width: 100%; height: 100%; outline: none; }
 @media (min-width: 1025px) {
   body.drawer-open #viewport { transform: translateX(-160px); }
@@ -499,6 +499,21 @@ body[data-vc-patient="1"] #speed-pills { display: none !important; }
 
 body[data-vc-presentation="1"] .clinician-tool,
 body[data-vc-presentation="1"] #ipr-tool-overlay { display: none !important; }
+
+@media (max-width: 768px), (pointer: coarse) {
+  :root {
+    --glass: rgba(24, 27, 34, 0.88);
+    --glass-strong: rgba(22, 25, 32, 0.94);
+    --glass-blur: none;
+  }
+  [data-theme="light"] {
+    --glass: rgba(252, 250, 245, 0.90);
+    --glass-strong: rgba(254, 253, 250, 0.96);
+  }
+  .glass {
+    backdrop-filter: none; -webkit-backdrop-filter: none;
+  }
+}
 
 @media (max-width: 1024px) {
   .stage-dock { width: min(700px, calc(100vw - var(--rail-w) - 24px)); }
