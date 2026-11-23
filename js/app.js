@@ -41,7 +41,7 @@
       dropZone: 'Click or drag &amp; drop a <strong>.iiwgl</strong> file',
       encTitle: 'Encrypted Case',
       encDesc: 'Enter the case password to unlock this 3D treatment setup.',
-      pwdPlaceholder: 'Case password', unlockBtn: 'Unlock & Render',
+      pwdPlaceholder: 'Case password', unlockBtn: 'Unlock & Render', retryBtn: 'Retry Loading Case',
       clipTitle: 'Cross-Section Slicer', clipOff: 'Off', clipAxial: 'Axial', clipSag: 'Sagittal', clipCor: 'Coronal', clipFlip: 'Flip',
       expTitle: 'Export', expStl: 'STL Mesh (Current Stage)', expPng: 'Screenshot PNG', expJson: 'Clinical JSON Report',
       drawerTitle: 'Clinical Analytics', tabMov: 'Movements', tabBol: 'Bolton / IPR', tabAna: 'Anatomy',
@@ -70,7 +70,7 @@
       dropZone: '点击或拖放 <strong>.iiwgl</strong> 文件',
       encTitle: '加密病例',
       encDesc: '请输入病例密码以解锁此 3D 矫治方案。',
-      pwdPlaceholder: '病例密码', unlockBtn: '解锁并渲染',
+      pwdPlaceholder: '病例密码', unlockBtn: '解锁并渲染', retryBtn: '重试加载病例',
       clipTitle: '剖面切片', clipOff: '关闭', clipAxial: '水平', clipSag: '矢状', clipCor: '冠状', clipFlip: '翻转',
       expTitle: '导出', expStl: 'STL 网格（当前步）', expPng: 'PNG 截图', expJson: '临床 JSON 报告',
       drawerTitle: '临床分析', tabMov: '牙齿移动', tabBol: 'Bolton / 去釉', tabAna: '解剖结构',
@@ -99,7 +99,7 @@
       dropZone: 'Haz clic o arrastra un archivo <strong>.iiwgl</strong>',
       encTitle: 'Caso Protegido',
       encDesc: 'Introduce la contraseña del caso para ver la simulación 3D.',
-      pwdPlaceholder: 'Contraseña del caso', unlockBtn: 'Desbloquear y Mostrar',
+      pwdPlaceholder: 'Contraseña del caso', unlockBtn: 'Desbloquear y Mostrar', retryBtn: 'Reintentar carga',
       clipTitle: 'Plano de Corte', clipOff: 'Off', clipAxial: 'Axial', clipSag: 'Sagital', clipCor: 'Coronal', clipFlip: 'Invertir',
       expTitle: 'Exportar', expStl: 'Malla STL (Paso actual)', expPng: 'Captura PNG', expJson: 'Informe JSON Clínico',
       drawerTitle: 'Analítica Clínica', tabMov: 'Movimientos', tabBol: 'Bolton / IPR', tabAna: 'Anatomía',
@@ -128,7 +128,7 @@
       dropZone: 'Cliquez ou glissez un fichier <strong>.iiwgl</strong>',
       encTitle: 'Cas Protégé',
       encDesc: 'Entrez le mot de passe du cas pour afficher la simulation 3D.',
-      pwdPlaceholder: 'Mot de passe', unlockBtn: 'Déverrouiller',
+      pwdPlaceholder: 'Mot de passe', unlockBtn: 'Déverrouiller', retryBtn: 'Réessayer le chargement',
       clipTitle: 'Plan de Coupe', clipOff: 'Off', clipAxial: 'Axial', clipSag: 'Sagittal', clipCor: 'Coronal', clipFlip: 'Inverser',
       expTitle: 'Exporter', expStl: 'Maillage STL (Étape active)', expPng: 'Capture PNG', expJson: 'Rapport JSON Clinique',
       drawerTitle: 'Analyse Clinique', tabMov: 'Mouvements', tabBol: 'Bolton / R.I.P.', tabAna: 'Anatomie',
@@ -157,7 +157,7 @@
       dropZone: 'Klicken oder <strong>.iiwgl</strong>-Datei hierher ziehen',
       encTitle: 'Geschützter Fall',
       encDesc: 'Fallpasswort eingeben, um diese 3D-Simulation zu öffnen.',
-      pwdPlaceholder: 'Fallpasswort', unlockBtn: 'Entsperren & Anzeigen',
+      pwdPlaceholder: 'Fallpasswort', unlockBtn: 'Entsperren & Anzeigen', retryBtn: 'Erneut versuchen',
       clipTitle: 'Querschnitt', clipOff: 'Aus', clipAxial: 'Axial', clipSag: 'Sagittal', clipCor: 'Koronal', clipFlip: 'Umkehren',
       expTitle: 'Exportieren', expStl: 'STL-Netz (Aktueller Schritt)', expPng: 'Screenshot PNG', expJson: 'Klinischer JSON-Bericht',
       drawerTitle: 'Klinische Analyse', tabMov: 'Bewegungen', tabBol: 'Bolton / ASR', tabAna: 'Anatomie',
@@ -186,7 +186,7 @@
       dropZone: 'انقر أو اسحب وأفلت ملف <strong>.iiwgl</strong>',
       encTitle: 'حالة مشفرة',
       encDesc: 'أدخل كلمة مرور الحالة لعرض الخطة ثلاثية الأبعاد.',
-      pwdPlaceholder: 'كلمة مرور الحالة', unlockBtn: 'فتح وعرض',
+      pwdPlaceholder: 'كلمة مرور الحالة', unlockBtn: 'فتح وعرض', retryBtn: 'إعادة المحاولة',
       clipTitle: 'قاطع المقطع العرضي', clipOff: 'إيقاف', clipAxial: 'محوري', clipSag: 'سهمي', clipCor: 'إكليلي', clipFlip: 'عكس',
       expTitle: 'تصدير', expStl: 'نموذج STL (المرحلة الحالية)', expPng: 'لقطة شاشة PNG', expJson: 'تقرير JSON السريري',
       drawerTitle: 'التحليل السريري', tabMov: 'الحركات', tabBol: 'Bolton / IPR', tabAna: 'التشريح',
@@ -215,7 +215,7 @@
       dropZone: 'ক্লিক করুন বা <strong>.iiwgl</strong> ফাইল টেনে আনুন',
       encTitle: 'এনক্রিপ্টেড কেস',
       encDesc: 'এই 3D সেটআপ আনলক করতে পাসওয়ার্ড দিন।',
-      pwdPlaceholder: 'কেস পাসওয়ার্ড', unlockBtn: 'আনলক ও রেন্ডার',
+      pwdPlaceholder: 'কেস পাসওয়ার্ড', unlockBtn: 'আনলক ও রেন্ডার', retryBtn: 'আবার চেষ্টা করুন',
       clipTitle: 'ক্রস-সেকশন স্লাইসার', clipOff: 'বন্ধ', clipAxial: 'অ্যাক্সিয়াল', clipSag: 'স্যাজিটাল', clipCor: 'করোনাল', clipFlip: 'উল্টান',
       expTitle: 'এক্সপোর্ট', expStl: 'STL মেশ (বর্তমান ধাপ)', expPng: 'স্ক্রিনশট PNG', expJson: 'ক্লিনিক্যাল JSON রিপোর্ট',
       drawerTitle: 'ক্লিনিক্যাল অ্যানালিটিক্স', tabMov: 'মুভমেন্ট', tabBol: 'Bolton / IPR', tabAna: 'অ্যানাটমি',
@@ -244,7 +244,7 @@
       dropZone: 'Clique ou arraste um arquivo <strong>.iiwgl</strong>',
       encTitle: 'Caso Protegido',
       encDesc: 'Digite a senha do caso para abrir esta simulação 3D.',
-      pwdPlaceholder: 'Senha do caso', unlockBtn: 'Desbloquear e Exibir',
+      pwdPlaceholder: 'Senha do caso', unlockBtn: 'Desbloquear e Exibir', retryBtn: 'Tentar novamente',
       clipTitle: 'Plano de Corte', clipOff: 'Off', clipAxial: 'Axial', clipSag: 'Sagital', clipCor: 'Coronal', clipFlip: 'Inverter',
       expTitle: 'Exportar', expStl: 'Malha STL (Etapa atual)', expPng: 'Captura PNG', expJson: 'Relatório JSON Clínico',
       drawerTitle: 'Análise Clínica', tabMov: 'Movimentos', tabBol: 'Bolton / IPR', tabAna: 'Anatomia',
@@ -273,7 +273,7 @@
       dropZone: 'Нажмите или перетащите файл <strong>.iiwgl</strong>',
       encTitle: 'Защищённый кейс',
       encDesc: 'Введите пароль кейса, чтобы открыть 3D-сетап.',
-      pwdPlaceholder: 'Пароль кейса', unlockBtn: 'Открыть 3D',
+      pwdPlaceholder: 'Пароль кейса', unlockBtn: 'Открыть 3D', retryBtn: 'Повторить загрузку',
       clipTitle: 'Сечение', clipOff: 'Выкл', clipAxial: 'Аксиал.', clipSag: 'Сагитт.', clipCor: 'Корон.', clipFlip: 'Инверт.',
       expTitle: 'Экспорт', expStl: 'STL-модель (текущий этап)', expPng: 'Снимок PNG', expJson: 'Клинический JSON-отчёт',
       drawerTitle: 'Клинический анализ', tabMov: 'Перемещения', tabBol: 'Bolton / IPR', tabAna: 'Анатомия',
@@ -1817,7 +1817,16 @@
     } catch (_) { return s; }
   }
 
+  let lastFetch = null, autoRetryTimer = null;
+  function clearAutoRetry() {
+    if (autoRetryTimer) { clearInterval(autoRetryTimer); autoRetryTimer = null; }
+  }
+
   async function fetchIIWGL(rawUrl, pwd, title) {
+    clearAutoRetry();
+    lastFetch = { rawUrl, pwd, title };
+    if ($('retry-case')) $('retry-case').style.display = 'none';
+    if ($('modal-err')) $('modal-err').textContent = '';
     const url = normalizeMlink(rawUrl);
     let parsed = null;
     try { parsed = new URL(url, location.href); } catch (_) {}
@@ -1884,6 +1893,27 @@
       $('pwd-input').style.display = 'none';
       $('pwd-submit').style.display = 'none';
       $('modal-err').textContent = host ? `${e.message} (${host})` : e.message;
+      const rb = $('retry-case');
+      if (rb) {
+        rb.textContent = I18N[S.lang].retryBtn;
+        rb.style.display = 'block';
+      }
+      if (isCasesHost) {
+        let probing = false;
+        autoRetryTimer = setInterval(async () => {
+          if (probing) return;
+          probing = true;
+          try {
+            const sep = fetchUrl.includes('?') ? '&' : '?';
+            const res = await fetch(`${fetchUrl}${sep}chk=${Date.now()}`, { method: 'HEAD', cache: 'no-store' });
+            if (res.ok) {
+              clearAutoRetry();
+              fetchIIWGL(rawUrl, pwd, title);
+            }
+          } catch (_) {}
+          probing = false;
+        }, 10000);
+      }
     }
   }
 
@@ -1943,6 +1973,7 @@
     }
     if (S.caliperPts.length < 2) $('caliper-val').textContent = t.rulerHint;
     $('pwd-input').placeholder = t.pwdPlaceholder; $('pwd-submit').textContent = t.unlockBtn;
+    if ($('retry-case')) $('retry-case').textContent = t.retryBtn;
     if ($('pwd-input').style.display !== 'none') {
       $('modal-title').textContent = t.encTitle; $('modal-desc').textContent = t.encDesc;
     } else {
@@ -2141,6 +2172,8 @@
 
     const handleFile = file => {
       if (!file) return;
+      clearAutoRetry();
+      if ($('retry-case')) $('retry-case').style.display = 'none';
       const r = new FileReader();
       r.onload = () => tryOpenBuffer(r.result, null, file.name.replace(/\.(iiwgl|unencrypted)$/i, ''));
       r.readAsArrayBuffer(file);
@@ -2156,6 +2189,7 @@
     const unlock = () => { if (S.pendingBuf) tryOpenBuffer(S.pendingBuf.buf, $('pwd-input').value, S.pendingBuf.title); };
     $('pwd-submit').onclick = unlock;
     $('pwd-input').onkeydown = e => { if (e.key === 'Enter') unlock(); };
+    if ($('retry-case')) $('retry-case').onclick = () => { if (lastFetch) fetchIIWGL(lastFetch.rawUrl, lastFetch.pwd, lastFetch.title); };
 
     window.addEventListener('message', ev => {
       try {
