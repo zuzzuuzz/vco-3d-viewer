@@ -2251,7 +2251,7 @@
     let savedLang = null;
     try { savedLang = localStorage.getItem('vc_lang'); } catch (_) {}
     setLang(qs.get('lang') || savedLang || 'en');
-    setTheme(qs.get('theme') === 'light' ? 'light' : 'dark');
+    setTheme(qs.get('theme') === 'dark' ? 'dark' : 'light');
     const mlink = qs.get('mlink');
     const pwd = qs.get('p') || qs.get('pw') || null;
     const title = qs.get('title') || null;
